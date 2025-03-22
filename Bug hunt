@@ -1,0 +1,81 @@
+#!/bin/bash
+
+# Title: Bug Hunt
+
+# Update and upgrade Termux packages
+pkg update -y
+pkg upgrade -y
+
+# Install necessary tools
+pkg install -y git curl wget python python2 ruby
+
+# Tool: File Chasser
+git clone https://github.com/user/file-chasser.git
+cd file-chasser
+chmod +x install.sh
+./install.sh
+cd ..
+
+# Tool: Netripper
+git clone https://github.com/user/netripper.git
+cd netripper
+chmod +x install.sh
+./install.sh
+cd ..
+
+# Tool: Net Trace
+git clone https://github.com/user/net-trace.git
+cd net-trace
+chmod +x install.sh
+./install.sh
+cd ..
+
+# Tool: Log Trace
+git clone https://github.com/user/log-trace.git
+cd log-trace
+chmod +x install.sh
+./install.sh
+cd ..
+
+# Tool: Kernel Trace
+git clone https://github.com/user/kernel-trace.git
+cd kernel-trace
+chmod +x install.sh
+./install.sh
+cd ..
+
+# Tool: Endpoint Hunter
+git clone https://github.com/user/endpoint-hunter.git
+cd endpoint-hunter
+chmod +x install.sh
+./install.sh
+cd ..
+
+# Tool: Code Bracker
+git clone https://github.com/user/code-bracker.git
+cd code-bracker
+chmod +x install.sh
+./install.sh
+cd ..
+
+# Tool: Metasploit Exploits
+pkg install -y unstable-repo
+pkg install -y metasploit
+
+# Tool: Fat Rat Tools
+git clone https://github.com/Screetsec/TheFatRat.git
+cd TheFatRat
+chmod +x setup.sh
+./setup.sh
+cd ..
+
+# Tool: Bruteforce Tools
+pkg install -y hydra
+pkg install -y ncrack
+pkg install -y john
+
+# Clean up
+apt autoremove -y
+apt clean
+
+echo "Bug Hunt tools have been successfully installed!"
