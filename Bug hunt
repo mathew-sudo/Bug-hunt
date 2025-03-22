@@ -1,12 +1,9 @@
+
 #!/bin/bash
 
 # Title: Bug Hunt
-image: Bug hunt
+# Image: Bug hunt
 
-nmap:oparations image.sh,
-tools & utils
-intergarte with all tools options utils
-& image
 # Update and upgrade Termux packages
 pkg update -y
 pkg upgrade -y
@@ -78,6 +75,16 @@ cd ..
 pkg install -y hydra
 pkg install -y ncrack
 pkg install -y john
+
+# Nmap Operations
+# Example Nmap scan command (customize as needed)
+# nmap -sV -oN nmap_scan_results.txt target_ip
+
+# Utilities and Integration
+# Integrate tools with image processing or other utilities
+# Example: Convert an image with ImageMagick (customize as needed)
+# pkg install -y imagemagick
+# convert input_image.png -resize 800x600 output_image.png
 
 # Clean up
 apt autoremove -y
