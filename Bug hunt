@@ -1,87 +1,38 @@
-
 #!/bin/bash
 
-Title: Bug Hunt
-Image: Bug hunt
+# Title: Bug Hunt
+# Image: Bug hunt
 
-Update and upgrade Termux packages
-pkg update -y
-pkg upgrade -y
+# Create a workspace for Metasploitable3
+mkdir metasploitable3-workspace
+cd metasploitable3-workspace
 
-Install necessary tools
-pkg install -y git curl wget python python2 ruby
+# Download and start Metasploitable3 using Vagrant
+curl -O https://raw.githubusercontent.com/rapid7/metasploitable3/master/Vagrantfile
+vagrant up
 
-File Chasser
-git clone https://github.com/user/file-chasser.git
-cd file-chasser
-chmod +x install.sh
-./install.sh
+# Build the Metasploitable3 environment with Packer
+TMPDIR=/var/tmp ./build.sh packer build --only=<provider> ./packer/templates/windows_2008_r2.json
 
-Netripper
-git clone https://github.com/user/netripper.git
-cd netripper
-chmod +x install.sh
-./install.sh
-
-Net Trace
-git clone https://github.com/user/net-trace.git
-cd net-trace
-chmod +x install.sh
-./install.sh
-
-Log Trace
-git clone https://github.com/user/log-trace.git
-cd log-trace
-chmod +x install.sh
-./install.sh
-
-Kernel Trace
-git clone https://github.com/user/kernel-trace.git
-cd kernel-trace
-chmod +x install.sh
-./install.sh
-
-Endpoint Hunter
-git clone https://github.com/user/endpoint-hunter.git
-cd endpoint-hunter
-chmod +x install.sh
-./install.sh
-
-Code Bracker
-git clone https://github.com/user/code-bracker.git
-cd code-bracker
-chmod +x install.sh
-./install.sh
-
-git clone https:// Metasploit framework.com
-pkg install -y unstable-repo
-pkg install -y metasploit
-chmod +x setup.sh
-bash ./setup.sh
-
-Fat Rat Tools
+# Set up TheFatRat tools
 git clone https://github.com/Screetsec/TheFatRat.git
 cd TheFatRat
 chmod +x setup.sh
 bash ./setup.sh
+chmod +x chk_tools 
+./chk_tools
+bash start.sh
 
-git clone https:// Bruteforce Tools
+# Set up Kraken
+git clone https://github.com/jasonxtn/kraken.git
+cd Kraken
+pip install -r requirements.txt
+python kraken.py
+
+# Install bruteforce tools
+git clone https://github.com/Bruteforce
 pkg install -y hydra
 pkg install -y ncrack
 pkg install -y john
 
-Nmap Operations
-Nmap scan command (customize as needed)
-nmap -sV -oN nmap_scan_results.txt target_ip
-
-Utilities and Integration
-Integrate tools with image processing or other utilities
-Example: Convert an image with ImageMagick (customize as needed)
-pkg install -y imagemagick
-convert input_image.png -resize 800x600 output_image.png
-
-Clean up
-apt update && apt upgrade -y
-apt clean
-
-echo "Bug Hunt tools have been successfully installed!"
+replace provider with=virtualbox-iso, vmware-iso, qemu
