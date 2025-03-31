@@ -1,93 +1,87 @@
 
 #!/bin/bash
 
-# Title: Bug Hunt
-# Image: Bug hunt
+Title: Bug Hunt
+Image: Bug hunt
 
-# Update and upgrade Termux packages
+Update and upgrade Termux packages
 pkg update -y
 pkg upgrade -y
 
-# Install necessary tools
+Install necessary tools
 pkg install -y git curl wget python python2 ruby
 
-# Tool: File Chasser
+File Chasser
 git clone https://github.com/user/file-chasser.git
 cd file-chasser
 chmod +x install.sh
 ./install.sh
-cd ..
 
-# Tool: Netripper
+Netripper
 git clone https://github.com/user/netripper.git
 cd netripper
 chmod +x install.sh
 ./install.sh
-cd ..
 
-# Tool: Net Trace
+Net Trace
 git clone https://github.com/user/net-trace.git
 cd net-trace
 chmod +x install.sh
 ./install.sh
-cd ..
 
-# Tool: Log Trace
+Log Trace
 git clone https://github.com/user/log-trace.git
 cd log-trace
 chmod +x install.sh
 ./install.sh
-cd ..
 
-# Tool: Kernel Trace
+Kernel Trace
 git clone https://github.com/user/kernel-trace.git
 cd kernel-trace
 chmod +x install.sh
 ./install.sh
-cd ..
 
-# Tool: Endpoint Hunter
+Endpoint Hunter
 git clone https://github.com/user/endpoint-hunter.git
 cd endpoint-hunter
 chmod +x install.sh
 ./install.sh
-cd ..
 
-# Tool: Code Bracker
+Code Bracker
 git clone https://github.com/user/code-bracker.git
 cd code-bracker
 chmod +x install.sh
 ./install.sh
-cd ..
 
-# Tool: Metasploit Exploits
+git clone https:// Metasploit framework.com
 pkg install -y unstable-repo
 pkg install -y metasploit
+chmod +x setup.sh
+bash ./setup.sh
 
-# Tool: Fat Rat Tools
+Fat Rat Tools
 git clone https://github.com/Screetsec/TheFatRat.git
 cd TheFatRat
 chmod +x setup.sh
-./setup.sh
-cd ..
+bash ./setup.sh
 
-# Tool: Bruteforce Tools
+git clone https:// Bruteforce Tools
 pkg install -y hydra
 pkg install -y ncrack
 pkg install -y john
 
-# Nmap Operations
-# Example Nmap scan command (customize as needed)
-# nmap -sV -oN nmap_scan_results.txt target_ip
+Nmap Operations
+Nmap scan command (customize as needed)
+nmap -sV -oN nmap_scan_results.txt target_ip
 
-# Utilities and Integration
-# Integrate tools with image processing or other utilities
-# Example: Convert an image with ImageMagick (customize as needed)
-# pkg install -y imagemagick
-# convert input_image.png -resize 800x600 output_image.png
+Utilities and Integration
+Integrate tools with image processing or other utilities
+Example: Convert an image with ImageMagick (customize as needed)
+pkg install -y imagemagick
+convert input_image.png -resize 800x600 output_image.png
 
-# Clean up
-apt autoremove -y
+Clean up
+apt update && apt upgrade -y
 apt clean
 
 echo "Bug Hunt tools have been successfully installed!"
