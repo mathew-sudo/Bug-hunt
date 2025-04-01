@@ -1,5 +1,5 @@
-# Title: Bug Hunt
-# Image: Bug hunt
+ curl setup Title: Bug Hunt && setup Image: Bug hunt && # /.replace provider with=virtualbox-iso, vmware-iso, qemu
+
 
 # Create a workspace for Metasploitable3
 mkdir metasploitable3-workspace
@@ -33,4 +33,8 @@ pkg install -y hydra
 pkg install -y ncrack
 pkg install -y john
 
-replace provider with=virtualbox-iso, vmware-iso, qemu
+# run bash script `start.sh`
+bash start.sh  # or `./start.sh`
+
+./termux-packages/build-package.sh ../packages/package-to-build)
+./start-builder.sh ./build-package.sh name-of-package
