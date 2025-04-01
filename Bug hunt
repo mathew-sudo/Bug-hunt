@@ -1,4 +1,4 @@
-  curl setup Title: Bug Hunt && setup Image: Bug hunt && # /.replace provider with=virtualbox-iso, vmware-iso, qemu
+  curl setup Title: Bug-Hunt && setup Image: Bug-hunt && # /.replace provider with=Bug-hunt
 
 apt install.sh bash install /.sh -Y
 
