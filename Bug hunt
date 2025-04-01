@@ -1,4 +1,4 @@
- curl setup Title: Bug Hunt && setup Image: Bug hunt && # /.replace provider with=virtualbox-iso, vmware-iso, qemu
+  curl setup Title: Bug Hunt && setup Image: Bug hunt && # /.replace provider with=virtualbox-iso, vmware-iso, qemu
 
 apt install.sh bash install /.sh -Y
 
@@ -11,7 +11,7 @@ curl -O https://raw.githubusercontent.com/rapid7/metasploitable3/master/Vagrantf
 vagrant up
 
 # Build the Metasploitable3 environment with Packer
-TMPDIR=/var/tmp ./build.sh packer build --only=<provider> ./packer/templates/windows_2008_r2.json
+TMPDIR=/var/tmp ./build.sh packer build --only=<metasploit> ./packer/templates/windows_2008_r2.json
 
 # Set up TheFatRat tools
 git clone https://github.com/Screetsec/TheFatRat.git
@@ -38,4 +38,4 @@ pkg install -y john
 bash start.sh  # or `./start.sh`
 
 ./termux-packages/build-package.sh ../packages/package-to-build)
-./start-builder.sh ./build-package.sh name-of-package
+./start-builder.sh ./build-package.sh name-of-package= <metasploit>
