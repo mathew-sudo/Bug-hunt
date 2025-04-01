@@ -1,5 +1,6 @@
  curl setup Title: Bug Hunt && setup Image: Bug hunt && # /.replace provider with=virtualbox-iso, vmware-iso, qemu
 
+apt install.sh bash install /.sh -Y
 
 # Create a workspace for Metasploitable3
 mkdir metasploitable3-workspace
