@@ -51,7 +51,3 @@ pkg install -y hydra ncrack john
 # Uncomment the following lines to install ImageMagick and process images
 # pkg install -y imagemagick
 # convert input_image.png -resize 800x600 output_image.png
-
-# Clean up
-apt autoremove -y
-apt clean
