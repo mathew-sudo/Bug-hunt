@@ -1,6 +1,6 @@
   curl setup Title: Bug-Hunt && setup Image: Bug-hunt && # /.replace provider with=Bug-hunt
 
-apt install.sh bash install /.sh -Y
+apt install.sh bash install /.sh -y
 
 # Create a workspace for Metasploitable3
 mkdir metasploitable3-workspace
@@ -23,13 +23,14 @@ chmod +x chk_tools
 bash start.sh
 
 # Set up Kraken
-git clone https://github.com/jasonxtn/kraken.git
-cd Kraken
-pip install -r requirements.txt
-python kraken.py
+wget clone https://github.com/jasonxtn/kraken.git
+pip3 install Kraken
+bash install -r requirements.txt
+python kraken.py bash chmod +x chk_tools
+bash # start.sh or # start/.sh
 
 # Install bruteforce tools
-git clone https://github.com/Bruteforce
+wget clone https://github.com/Bruteforce
 pkg install -y hydra
 pkg install -y ncrack
 pkg install -y john
