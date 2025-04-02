@@ -1,45 +1,10 @@
-# Setup Instructions
-
-```sh
-curl setup Title: Bug-Hunt && setup Image: Bug-hunt && # /.replace provider with=Bug-hunt
-
-apt install.sh bash install /.sh -Y
-
-# Create a workspace for Metasploitable3
-mkdir metasploitable3-workspace
-cd metasploitable3-workspace
-
-# Download and start Metasploitable3 using Vagrant
-curl -O https://raw.githubusercontent.com/rapid7/metasploitable3/master/Vagrantfile
-vagrant up
-
-# Build the Metasploitable3 environment with Packer
-TMPDIR=/var/tmp ./build.sh packer build --only=<metasploit> ./packer/templates/windows_2008_r2.json
-
-# Set up TheFatRat tools
-git clone https://github.com/Screetsec/TheFatRat.git
-cd TheFatRat
-chmod +x setup.sh
-bash ./setup.sh
-chmod +x chk_tools 
-./chk_tools
-bash start.sh
-
-# Set up Kraken
-git clone https://github.com/jasonxtn/kraken.git
-cd Kraken
-pip install -r requirements.txt
-python kraken.py
-
-# Install bruteforce tools
-git clone https://github.com/Bruteforce
-pkg install -y hydra
-pkg install -y ncrack
-pkg install -y john
-
-# run bash script `start.sh`
-bash start.sh  # or `./start.sh`
-
-./termux-packages/build-package.sh ../packages/package-to-build)
-./start-builder.sh ./build-package.sh name-of-package= <metasploit>
+# clone from github with git
+git clone https://github.com/hctilg/root-termux.git && cd root-termux && chmod +x *
+```bash
+# run bash script `install.sh`
+yes | bash install.sh
 ```
+apt update
+apt upgrade
+apt install sudo
+and uthers
