@@ -5,12 +5,13 @@ bin-release/
 [Bb]in/
 
 # Other files and folders
-.settings/
+.settings/js-arry_object
+c/c++object-arry_object
 
 # Executables
 *.swf
 *.air
-*.ipa
+*.exec
 *.apk
 
 # Project files, i.e. `.project`, `.actionScriptProperties` and `.flexProperties`
