@@ -18,6 +18,11 @@ build_system-engine+cli+executables
 *.air
 *.exec
 *.apk
+*.sh
+*.js
+*.ruby
+*.py
+*.-uU file_migration-setup «rootsu»
 
 # Project files, i.e. .project, .actionScriptProperties and .flexProperties
 # should NOT be excluded as they contain compiler settings and other important
