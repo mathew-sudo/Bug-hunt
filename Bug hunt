@@ -11,7 +11,7 @@ curl -O https://raw.githubusercontent.com/rapid7/metasploitable3/master/Vagrantf
 vagrant up
 
 # Build the Metasploitable3 environment with Packer
-TMPDIR=/var/tmp ./build.sh packer build --only=<metasploit> ./packer/templates/windows_2008_r2.json
+TMPDIR=/var/tmp ./build.sh packer build --only=<metasploit> ./packer/templates/Android_arm71_r2.json
 
 # Set up TheFatRat tools
 git clone https://github.com/Screetsec/TheFatRat.git
