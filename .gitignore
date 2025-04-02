@@ -5,8 +5,12 @@ bin-release/
 [Bb]in/
 
 # Other files and folders
-.settings/js-arry_object
-c/c++object-arry_object
+.settings/java-code-js+arry_object
+c/c++object+arry_object
+exsploit-triggers+ctl+cli
+navigation-ctl+cli
+user-interface+ctl+cli
+image-interface+ctl+cli
 
 # Executables
 *.swf
