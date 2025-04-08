@@ -1,0 +1,159 @@
+
+# Update and install necessary packages
+sudo apt update
+sudo apt install -y curl wget git vagrant packer python3-pip
+
+# Create a workspace for Metasploitable3
+mkdir metasploitable3-workspace
+cd metasploitable3-workspace
+
+# Download and start Metasploitable3 using Vagrant
+curl -O https://raw.githubusercontent.com/rapid7/metasploitable3/master/Vagrantfile
+vagrant up
+
+# Build the Metasploitable3 environment with Packer
+TMPDIR=/var/tmp ./build.sh packer build --only=virtualbox-iso ./packer/templates/windows_2008_r2.json
+
+# Set up TheFatRat tools
+cd ..
+git clone https://github.com/Screetsec/TheFatRat.git
+cd TheFatRat
+chmod +x setup.sh
+sudo bash ./setup.sh
+chmod +x chk_tools 
+./chk_tools
+image: 30×20px
+bash start.sh
+
+# Set up Kraken
+cd ..
+git clone https://github.com/jasonxtn/kraken.git
+cd kraken
+pip3 install -r requirements.txt
+chmod +x chk_tools
+python kraken.py
+image: 30×20px
+bash start.sh
+
+# Install bruteforce tools
+sudo apt install -y hydra ncrack john
+
+# Run start.sh script
+bash start.sh  # or `./start.sh`
+
+# Build a package (if needed)
+# ./termux-packages/build-package.sh ../packages/package-to-build
+# ./start-builder.sh ./build-package.sh name-of-package
+# Update and install necessary packages
+sudo apt update
+sudo apt install -y curl wget git vagrant packer python3-pip
+
+# Create a workspace for Metasploitable3
+mkdir metasploitable3-workspace
+cd metasploitable3-workspace
+
+# Download and start Metasploitable3 using Vagrant
+curl -O https://raw.githubusercontent.com/rapid7/metasploitable3/master/Vagrantfile
+vagrant up
+
+# Build the Metasploitable3 environment with Packer
+TMPDIR=/var/tmp ./build.sh packer build --only=virtualbox-iso ./packer/templates/windows_2008_r2.json
+
+# Set up TheFatRat tools
+cd ..
+git clone https://github.com/Screetsec/TheFatRat.git
+cd TheFatRat
+chmod +x setup.sh
+sudo bash ./setup.sh
+chmod +x chk_tools 
+./chk_tools
+image: 30×20px
+bash start.sh
+
+# Set up Kraken
+cd ..
+git clone https://github.com/jasonxtn/kraken.git
+cd kraken
+pip3 install -r requirements.txt
+chmod +x chk_tools
+python kraken.py
+image: 30×20px
+bash start.sh
+
+# Install bruteforce tools
+sudo apt install -y hydra ncrack john
+
+# Run start.sh script
+bash start.sh  # or `./start.sh`
+
+# Build a package (if needed)
+# ./termux-packages/build-package.sh ../packages/package-to-build
+# ./start-builder.sh ./build-package.sh name-of-package
+
+
+
+# Update and install necessary packages
+sudo apt update
+sudo apt install -y curl wget git vagrant packer python3-pip
+
+# Create a workspace for Bug-hunt
+
+# Build the Bug-hunt environment with Packer
+TMPDIR=/var/tmp ./build.sh packer build --only=virtualbox-iso ./packer/templates/windows_2008_r2.json
+
+# Set up TheFatRat tools
+cd ..
+git clone https://github.com/Screetsec/TheFatRat.git
+cd TheFatRat
+chmod +x setup.sh
+sudo bash ./setup.sh
+chmod +x chk_tools 
+./chk_tools
+bash start.sh
+
+# Set up Kraken
+cd ..
+git clone https://github.com/jasonxtn/kraken.git
+cd kraken
+pip3 install -r requirements.txt
+chmod +x chk_tools
+python kraken.py
+bash start.sh
+
+# Install bruteforce tools
+sudo apt install -y hydra ncrack john
+
+# Run start.sh script
+bash start.sh  # or `./start.sh`
+
+# Build a package (if needed)
+# ./termux-packages/build-package.sh ../packages/package-to-build
+# ./start-builder.sh ./build-package.sh name-of-packageBuild and Release Folders
+bin-debug/
+bin-release/
+[Bb]in/
+[Oo]bj/
+
+# Other files and folders
+.settings/java-code-js+arry_object
+c/c++object+arry_object
+exsploit-triggers+ctl+cli
+navigation-ctl+cli
+user-interface+ctl+cli
+image-interface+ctl+cli
+build_system-engine+cli+executables
+
+# Executables
+*.swf
+*.air
+*.exec
+*.apk
+*.sh
+*.js
+*.ruby
+*.py
+*.-uU file_migration-setup «rootsu»
+
+# Project files, i.e. .project, .actionScriptProperties and .flexProperties
+# should NOT be excluded as they contain compiler settings and other important
+# information for Eclipse / Flash Builder.
