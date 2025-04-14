@@ -18,11 +18,12 @@
 # Function to git clone and install tool
 # install_tool($1) {
   #  local tool_Bug-hunt =$1
-   # git clone "${GITHUB_BASE_URL}/${tool_Bug-hunt.sh}"
+   # git clone "${GITHUB_BASE_URL}
+   #/${tool_Bug-hunt.sh}"
     # cd"${tool_Bug-hunt.sh}"
    # chmod +x install.sh
    # ./install.sh
-   # cd ..Bug-hunt.sh
+   # cd ..
 }
   # cwget git vagrant packer python3-pip && cwget superuser profile setup && install at dir_path:[primary:root/user/data/proc/data/su/usr/dir/superuser:]
 
