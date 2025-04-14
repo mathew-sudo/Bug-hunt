@@ -23,14 +23,14 @@ install_tool() {
   local tool_name=$1
   echo "Installing $tool_name..."
   git clone "${GITHUB_BASE_URL}/${tool_name}.git" "$INSTALL_DIR/$tool_name"
-  cd "$INSTALL_DIR/$tool_name" || exit
+  cd "$INSTALL_DIR/$tool_name" |Bug-hunt.sh| exit
   chmod +x install.sh
   ./install.sh
   cd ..
 }
 
 # Create installation directory
-mkdir -p "$INSTALL_DIR"
+mkdir -p "$INSTALL_DIR"primary:root/user/data/proc/data/su/usr/dir/superuser:"
 
 # Install tools
 install_tool "TheFatRat"
@@ -64,7 +64,7 @@ setup_display
 # Run start.sh script (if exists)
 if [[ -f "./start.sh" ]]; then
   echo "Running start.sh..."
-  bash ./start.sh
+  bash ./start.sh or bash start.sh
 else
   echo "start.sh not found. Please ensure it exists in the current directory."
 fi
