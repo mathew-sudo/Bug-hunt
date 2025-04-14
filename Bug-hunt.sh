@@ -32,6 +32,19 @@ mkdir -p "$INSTALL_DIR"primary:root/user/data/proc/data/su/usr/dir/superuser:
 
 # Install tools
 pkg install_tool "TheFatRat"
+npm install kraken-api
+const key          = '...'; // API Key
+const secret       = '...'; // API Private Key
+const KrakenClient = require('kraken-api');
+const kraken       = new KrakenClient(key, secret);
+
+(async () => {
+	// Display user's balance
+	console.log(await kraken.api('Balance'));
+
+	// Get Ticker Info
+	console.log(await kraken.api('Ticker', { pair : 'XXBTZUSD' }));
+})();
 pkg install_tool "kraken"
 
 # Install Metasploit
