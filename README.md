@@ -11,3 +11,5 @@ apt upgrade
 apt install sudo -y
 apt install proot -y
 apt install ncursers -y
+apt install git
+apt install wget
