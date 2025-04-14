@@ -60,7 +60,15 @@ setup_display() {
 
 # Run Setup Display
 setup_display
-
+echo "Setting up display with the following properties:"
+  echo "Overlay Background Color: #00ff234fff"
+  echo "Title: Bug Hunt"
+  echo "Title Color: #000fff557"
+  echo "Border Style: solid"
+  echo "Border Color: Blue"
+  echo "Font: opendyslexic"
+  echo "Font Color: dark green"
+  echo "Background Color: Black"
 # Run start.sh script (if exists)
 if [[ -f "./start.sh" ]]; then
   echo "Running start.sh..."
@@ -68,5 +76,5 @@ if [[ -f "./start.sh" ]]; then
 else
   echo "start.sh not found. Please ensure it exists in the current directory."
 fi
-
-echo "Bug-Hunt setup completed!"
+eu.chainfire.libsuperuser.Shell$ShellDiedException: Shell
+echo "Bug-Hunt setup"
