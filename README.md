@@ -7,6 +7,7 @@ Modular Design: Install only what you need or the entire toolkit
 Simulation Mode: Test the installation process without actually modifying your system
 Compatible: Works on both Termux and standard Linux environments
 Tools Launcher: Quick access to security tools through an interactive menu system
+No-Auth Mode: Authentication prompts are bypassed automatically for streamlined usage
 Included Tools
 Basic Security Tools
 Nmap: Network discovery and security auditing
@@ -51,6 +52,15 @@ Help Guide
 For detailed usage instructions and examples, refer to the help guide:
 
 cat security_toolkit_help.txt
+No-Auth Mode
+The toolkit now features a No-Auth mode that automatically:
+
+Bypasses authentication prompts in security tools
+Auto-generates credentials when needed
+Simplifies tool usage with pre-configured settings
+Creates automatic configurations for tools like Metasploit and TheFatRat
+Shows "NO-AUTH MODE ENABLED" in the toolkit banner
+This mode is ideal for rapid deployments where you want to avoid interactive authentication prompts.
+
 Disclaimer
 This toolkit is designed for ethical hacking and security research ONLY. Always obtain proper authorization before testing on any network or system. Unauthorized access to systems is illegal and unethical. The developers assume no liability for misuse of these tools.
-
