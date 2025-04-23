@@ -1,0 +1,74 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          TERMUX SECURITY TOOLKIT - HELP GUIDE          
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+INSTALLED TOOLS:
+---------------
+1. Programming Languages:
+   - Python
+   - Ruby
+   - Rust
+   - Golang
+   - Erlang
+
+2. Basic Security Tools:
+   - Nmap: Network mapping and scanning
+   - Hydra: Password cracking tool
+   - Ncrack: Network authentication cracking
+   - ImageMagick: Image manipulation
+   - ncurses: Terminal UI library
+
+3. Advanced Security Tools:
+   - Metasploit Framework: Penetration testing framework
+   - Aircrack-ng: WiFi security assessment
+   - TheFatRat: Backdoor creator & spear phishing
+   - Brute Force tools: Various password crackers
+
+USAGE EXAMPLES:
+--------------
+1. Network Scanning:
+   $ nmap-quick 192.168.1.1
+   $ nmap-full 192.168.1.1
+
+2. Launch Metasploit:
+   $ msf
+
+3. WiFi Analysis (requires root):
+   $ aircrack-ng --help
+
+4. System Update:
+   $ update
+
+CUSTOM ALIASES:
+-------------
+- cls: Clear screen
+- ll: List files with details
+- nmap-quick: Quick nmap scan
+- nmap-full: Full detailed nmap scan
+- msf: Launch Metasploit console
+- update: Update all packages
+- myip: Show your IP addresses
+- netstat: Show network connections
+
+TROUBLESHOOTING:
+--------------
+1. Tool not found? Try:
+   $ pkg update && pkg upgrade -y
+
+2. Permission denied? Check if root access is required.
+
+3. Terminal settings not applied?
+   $ termux-reload-settings
+   Or restart Termux completely.
+
+4. For tools that require root:
+   Install Termux:Boot and configure properly.
+
+SECURITY NOTES:
+-------------
+- Never use these tools for illegal activities
+- Always obtain proper authorization before testing
+- Use in controlled environments when learning
+
+For more information, visit:
+https://wiki.termux.com/
