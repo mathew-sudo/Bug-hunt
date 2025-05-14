@@ -171,7 +171,7 @@ trap 'echo -e "${RED}[!] Error occurred in environment setup${RESET}"' ERR
 # Run main function
 main "$@"
 
-
+enviroment_setup.sh  chmod +x environment_setup.sh  ./environment_setup.sh
 
 auto_install() {
 #!/bin/bash
