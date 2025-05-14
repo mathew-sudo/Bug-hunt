@@ -1,3 +1,178 @@
+#!/bin/bash
+set -e
+
+# Define environment variables and paths
+declare -A ENV_CONFIG=(
+    ["TERMUX_PATH"]="/data/data/com.termux"
+    ["STANDARD_PREFIX"]="/usr"
+    ["CONFIG_BASE"]="$HOME/.config"
+)
+
+# Enhanced environment detection function
+check_environment() {
+    echo -e "${BLUE}[*] Checking system environment...${RESET}"
+    
+    # System information detection
+    local system_info=$(uname -a)
+    local os_type=$(uname -o)
+    local cpu_arch=$(uname -m)
+    local kernel_ver=$(uname -r)
+    
+    # Store environment info
+    cat > "$CONFIG_DIR/environment.json" << EOF
+{
+    "system": {
+        "os": "$os_type",
+        "kernel": "$kernel_ver",
+        "architecture": "$cpu_arch",
+        "full_info": "$system_info"
+    },
+    "runtime": {
+        "is_termux": $([[ -d "${ENV_CONFIG[TERMUX_PATH]}" ]] && echo "true" || echo "false"),
+        "uid": $(id -u),
+        "gid": $(id -g),
+        "has_root": $([[ $EUID -eq 0 ]] && echo "true" || echo "false")
+    }
+}
+EOF
+
+    # Environment-specific configuration
+    if [[ -d "${ENV_CONFIG[TERMUX_PATH]}" ]]; then
+        setup_termux_environment
+    else
+        setup_standard_environment
+    fi
+    
+    # Verify and secure environment
+    secure_environment
+}
+
+setup_termux_environment() {
+    PKG_MANAGER="pkg"
+    TERMUX_PREFIX="${ENV_CONFIG[TERMUX_PATH]}/files/usr"
+    CONFIG_DIR="$HOME/.termux"
+    
+    # Create and secure Termux directories
+    for dir in "bin" "etc" "tmp" "var/log" "var/run"; do
+        mkdir -p "$TERMUX_PREFIX/$dir"
+        chmod 700 "$TERMUX_PREFIX/$dir"
+    done
+    
+    # Setup Termux properties
+    setup_termux_properties
+    
+    echo -e "${GREEN}[✓] Termux environment configured successfully${RESET}"
+}
+
+setup_termux_properties() {
+    local properties_file="$CONFIG_DIR/termux.properties"
+    
+    # Backup existing properties
+    [[ -f "$properties_file" ]] && cp "$properties_file" "${properties_file}.backup"
+    
+    # Create enhanced properties file
+    cat > "$properties_file" << EOF
+# Enhanced Security Configuration
+allow_external_apps=false
+allow_external_scripts=false
+enforce_security=true
+terminal_margin=0
+bell-character=ignore
+allow_external_storage=false
+extra-keys=[['ESC','/','-','HOME','UP','END','PGUP'],['TAB','CTRL','ALT','LEFT','DOWN','RIGHT','PGDN']]
+EOF
+    
+    chmod 600 "$properties_file"
+}
+
+setup_standard_environment() {
+    PKG_MANAGER="apt"
+    TERMUX_PREFIX="${ENV_CONFIG[STANDARD_PREFIX]}"
+    CONFIG_DIR="${ENV_CONFIG[CONFIG_BASE]}/termux"
+    
+    # Create necessary directories
+    mkdir -p "$CONFIG_DIR"
+    chmod 700 "$CONFIG_DIR"
+    
+    echo -e "${YELLOW}[!] Standard Linux environment detected${RESET}"
+}
+
+secure_environment() {
+    # Set secure permissions
+    umask 077
+    
+    # Check for common security issues
+    local security_issues=()
+    
+    # Check world-writable directories
+    if find "$CONFIG_DIR" -type d -perm -002 2>/dev/null | grep -q .; then
+        security_issues+=("World-writable directories found")
+    fi
+    
+    # Check file permissions
+    if find "$CONFIG_DIR" -type f -perm -004 2>/dev/null | grep -q .; then
+        security_issues+=("World-readable files found")
+    fi
+    
+    # Verify important files
+    local critical_files=(
+        "$CONFIG_DIR/termux.properties"
+        "$CONFIG_DIR/environment.json"
+    )
+    
+    for file in "${critical_files[@]}"; do
+        if [[ -f "$file" ]]; then
+            chmod 600 "$file"
+        fi
+    done
+    
+    # Report security issues
+    if [[ ${#security_issues[@]} -gt 0 ]]; then
+        echo -e "${RED}[!] Security issues detected:${RESET}"
+        for issue in "${security_issues[@]}"; do
+            echo -e "${RED}    - $issue${RESET}"
+        done
+        
+        # Fix permissions
+        find "$CONFIG_DIR" -type d -exec chmod 700 {} \;
+        find "$CONFIG_DIR" -type f -exec chmod 600 {} \;
+    fi
+    
+    # Create security log
+    local log_file="$CONFIG_DIR/security.log"
+    {
+        echo "Security check performed at: $(date '+%Y-%m-%d %H:%M:%S')"
+        echo "Environment: $([[ -d "${ENV_CONFIG[TERMUX_PATH]}" ]] && echo "Termux" || echo "Standard Linux")"
+        echo "User ID: $(id -u)"
+        echo "Security issues found: ${#security_issues[@]}"
+    } > "$log_file"
+    
+    chmod 600 "$log_file"
+}
+
+# Add to main script
+main() {
+    # Initialize environment
+    check_environment
+    
+    # Verify environment setup
+    if [[ ! -f "$CONFIG_DIR/environment.json" ]]; then
+        echo -e "${RED}[!] Environment setup failed${RESET}"
+        exit 1
+    fi
+    
+    # Continue with rest of script...
+    # ... (your existing main function code)
+}
+
+# Error handling
+trap 'echo -e "${RED}[!] Error occurred in environment setup${RESET}"' ERR
+
+# Run main function
+main "$@"
+
+
+
 auto_install() {
 #!/bin/bash
 
