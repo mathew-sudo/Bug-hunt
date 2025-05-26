@@ -253,6 +253,86 @@ run_fatrat() {
     echo -e "${CYAN}[*] TheFatRat information displayed.${RESET}"
 }
 
+# Function to check/install Ruby gems and set up environment for root bypass
+setup_ruby_gems_and_root_bypass() {
+    echo -e "${CYAN}[*] Setting up Ruby gems and root bypass...${RESET}"
+    # Install common pentest gems
+    for gem in wpscan evil-winrm metasploit-framework snmp; do
+        if ! gem list | grep -q $gem; then
+            echo -e "${YELLOW}[*] Installing Ruby gem: $gem${RESET}"
+            gem install $gem --no-document
+        fi
+    done
+    # Attempt to get root if not already
+    if [[ $EUID -ne 0 ]]; then
+        echo -e "${YELLOW}[!] Not running as root. Attempting to escalate privileges...${RESET}"
+        if command -v tsu &>/dev/null; then
+            tsu || echo -e "${RED}[!] tsu failed. Continuing without root.${RESET}"
+        elif command -v sudo &>/dev/null; then
+            sudo -v || echo -e "${RED}[!] sudo failed. Continuing without root.${RESET}"
+        else
+            echo -e "${RED}[!] No root escalation tool found. Some tools may not work fully.${RESET}"
+        fi
+    else
+        echo -e "${GREEN}[✓] Already running as root.${RESET}"
+    fi
+}
+
+# Add more tools and exploits to the toolkit
+run_additional_tools() {
+    local tool=$1
+    case $tool in
+        "sqlmap")
+            is_installed "sqlmap"
+            echo -e "${CYAN}[*] Running SQLMap for SQL injection testing${RESET}"
+            echo -e "${YELLOW}    Command: sqlmap -u <target_url> --batch${RESET}"
+            ;;
+        "wpscan")
+            is_installed "wpscan"
+            echo -e "${CYAN}[*] Running WPScan for WordPress vulnerability scanning${RESET}"
+            echo -e "${YELLOW}    Command: wpscan --url <target_url> --enumerate u${RESET}"
+            ;;
+        "nikto")
+            is_installed "nikto"
+            echo -e "${CYAN}[*] Running Nikto for web server vulnerability scanning${RESET}"
+            echo -e "${YELLOW}    Command: nikto -h <target_url>${RESET}"
+            ;;
+        "john")
+            is_installed "john"
+            echo -e "${CYAN}[*] Running John the Ripper for password cracking${RESET}"
+            echo -e "${YELLOW}    Command: john <hashfile>${RESET}"
+            ;;
+        "hashcat")
+            is_installed "hashcat"
+            echo -e "${CYAN}[*] Running Hashcat for GPU password cracking${RESET}"
+            echo -e "${YELLOW}    Command: hashcat -m <mode> <hashfile> <wordlist>${RESET}"
+            ;;
+        "evil-winrm")
+            is_installed "evil-winrm"
+            echo -e "${CYAN}[*] Running Evil-WinRM for Windows remote shell${RESET}"
+            echo -e "${YELLOW}    Command: evil-winrm -i <target_ip> -u <user> -p <pass>${RESET}"
+            ;;
+        "snmp-check")
+            is_installed "snmp-check"
+            echo -e "${CYAN}[*] Running snmp-check for SNMP enumeration${RESET}"
+            echo -e "${YELLOW}    Command: snmp-check -t <target_ip>${RESET}"
+            ;;
+        "msfvenom")
+            is_installed "msfvenom"
+            echo -e "${CYAN}[*] Running msfvenom for payload generation${RESET}"
+            echo -e "${YELLOW}    Command: msfvenom -p <payload> LHOST=<ip> LPORT=<port> -f <format> -o <output>${RESET}"
+            ;;
+        "exploitdb")
+            is_installed "searchsploit"
+            echo -e "${CYAN}[*] Searching Exploit-DB with searchsploit${RESET}"
+            echo -e "${YELLOW}    Command: searchsploit <keyword>${RESET}"
+            ;;
+        *)
+            echo -e "${RED}[!] Unknown tool: $tool${RESET}"
+            ;;
+    esac
+}
+
 # Main menu
 main_menu() {
     display_banner
@@ -267,10 +347,11 @@ main_menu() {
     echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}05${WHITE}]${RESET} │ ${YELLOW}Brute Force Tools                                 ${BLUE}│${RESET}"
     echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}06${WHITE}]${RESET} │ ${YELLOW}TheFatRat Payload Generator                       ${BLUE}│${RESET}"
     echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}07${WHITE}]${RESET} │ ${YELLOW}Automated Security Scanner ${WHITE}(${CYAN}NEW${WHITE})               ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}08${WHITE}]${RESET} │ ${YELLOW}Additional Tools & Exploits${RESET}                         ${BLUE}│${RESET}"
     echo -e "${BLUE}│${RESET} ${WHITE}[${RED}00${WHITE}]${RESET} │ ${RED}Exit                                             ${BLUE}│${RESET}"
     echo -e "${BLUE}╰───────────────────────────────────────────────────────╯${RESET}\n"
     
-    read -p "$(echo -e $YELLOW"[?] Select a tool category [0-7]: "$RESET)" main_choice
+    read -p "$(echo -e $YELLOW"[?] Select a tool category [0-8]: "$RESET)" main_choice
     
     case $main_choice in
         1|01)
@@ -293,6 +374,9 @@ main_menu() {
             ;;
         7|07)
             automated_security_scan_menu
+            ;;
+        8|08)
+            additional_tools_menu
             ;;
         0|00)
             echo -e "\n${GREEN}[✓] Thank you for using the Termux Security Tools Launcher!${RESET}"
@@ -757,6 +841,45 @@ automated_security_scan_menu() {
     read -p "$(echo -e $GREEN"[>] Press Enter to continue..."$RESET)"
     automated_security_scan_menu
 }
+
+# Example: Add a menu for additional tools
+additional_tools_menu() {
+    display_banner
+    echo -e "${BLUE}╭───────────────────────────────────────────────────────────╮${RESET}"
+    echo -e "${BLUE}│${MAGENTA}                ADDITIONAL TOOLS & EXPLOITS              ${BLUE}│${RESET}"
+    echo -e "${BLUE}├───────────────────────────────────────────────────────────┤${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}1${WHITE}]${RESET} │ ${YELLOW}SQLMap${RESET}                                               ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}2${WHITE}]${RESET} │ ${YELLOW}WPScan${RESET}                                               ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}3${WHITE}]${RESET} │ ${YELLOW}Nikto${RESET}                                                ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}4${WHITE}]${RESET} │ ${YELLOW}John the Ripper${RESET}                                      ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}5${WHITE}]${RESET} │ ${YELLOW}Hashcat${RESET}                                              ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}6${WHITE}]${RESET} │ ${YELLOW}Evil-WinRM${RESET}                                           ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}7${WHITE}]${RESET} │ ${YELLOW}SNMP-Check${RESET}                                           ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}8${WHITE}]${RESET} │ ${YELLOW}msfvenom${RESET}                                             ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${GREEN}9${WHITE}]${RESET} │ ${YELLOW}Exploit-DB (searchsploit)${RESET}                            ${BLUE}│${RESET}"
+    echo -e "${BLUE}│${RESET} ${WHITE}[${RED}0${WHITE}]${RESET} │ ${RED}Back to Main Menu${RESET}                                    ${BLUE}│${RESET}"
+    echo -e "${BLUE}╰───────────────────────────────────────────────────────────╯${RESET}\n"
+    read -p "$(echo -e $YELLOW"[?] Select a tool [0-9]: "$RESET)" tool_choice
+    case $tool_choice in
+        1) run_additional_tools "sqlmap" ;;
+        2) run_additional_tools "wpscan" ;;
+        3) run_additional_tools "nikto" ;;
+        4) run_additional_tools "john" ;;
+        5) run_additional_tools "hashcat" ;;
+        6) run_additional_tools "evil-winrm" ;;
+        7) run_additional_tools "snmp-check" ;;
+        8) run_additional_tools "msfvenom" ;;
+        9) run_additional_tools "exploitdb" ;;
+        0) main_menu ;;
+        *) echo -e "\n${RED}[!] Invalid option. Please try again.${RESET}"; sleep 1; additional_tools_menu ;;
+    esac
+    echo
+    read -p "$(echo -e $GREEN"[>] Press Enter to continue..."$RESET)"
+    additional_tools_menu
+}
+
+# Call setup_ruby_gems_and_root_bypass at startup
+setup_ruby_gems_and_root_bypass
 
 # Start the main menu
 main_menu
