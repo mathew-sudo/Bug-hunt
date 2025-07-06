@@ -1,0 +1,459 @@
+in/bash
+#     echo -e "${RED}[✗] Please ensure you are in the correct directory.${RESET}"
+#     echo -e "${YELLOW}[*] Installing core packages...${RESET}"
+#     if ! timeout 300 $PKG_MANAGER install -y git curl wget python3 python3-pip openssl termux-tools; then
+#         echo -e "${YELLOW}[!] Core package installation failed or timed out, continuing...${RESET}"
+#     fi
+#     echo -e "${GREEN}[✓] Core packages installed successfully.${RESET}"
+#     echo -e "${YELLOW}[*] Installing additional packages...${RESET}"
+#     if ! timeout 300 $PKG_MANAGER install -y ruby tsu sudo nmap hydra aircrack-ng metasploit hashcat john sqlmap nikto; then
+#         echo -e "${YELLOW}[!] Additional package installation failed or timed out, continuing...${RESET}"
+#     fi
+#     echo -e "${GREEN}[✓] Additional packages installed successfully.${RESET}"
+#     if command -v gem &>/dev/null; then
+#         echo -e "${YELLOW}[*] Installing Ruby gems...${RESET}"
+#         if ! gem install wpscan evil-winrm metasploit-framework snmp --no-document; then
+#             echo -e "${YELLOW}[!] Ruby gem installation failed, continuing...${RESET}"
+#         fi
+#         echo -e "${GREEN}[✓] Ruby gems installed successfully.${RESET}"
+#     fi
+#     if command -v pip &>/dev/null; then
+#         echo -e "${YELLOW}[*] Installing Python modules...${RESET}"
+#         if ! pip install --upgrade pip; then
+#             echo -e "${YELLOW}[!] Pip upgrade failed, continuing...${RESET}"
+#         fi
+#         if ! pip install brut3k1t; then
+#             echo -e "${YELLOW}[!] Python module installation failed, continuing...${RESET}"
+#         fi
+#         echo -e "${GREEN}[✓] Python modules installed successfully.${RESET}"
+#     fi
+#     if ! command -v searchsploit &>/dev/null; then
+#         echo -e "${YELLOW}[*] Installing searchsploit (exploitdb)...${RESET}"
+#         if ! git clone https://github.com/OffensiveSecurity/exploitdb.git /opt/exploitdb; then
+#             echo -e "${YELLOW}[!] Searchsploit installation failed, continuing...${RESET}"
+#         else
+#             ln -s /opt/exploitdb/searchsploit /usr/local/bin/searchsploit 2>/dev/null || true
+#             echo -e "${GREEN}[✓] Searchsploit installed successfully.${RESET}"
+#         fi
+#     fi
+#     echo -e "${GREEN}[✓] Core packages and dependencies installation completed.${RESET}"
+#     echo -e "${RED}[✗] Please ensure you are in the correct directory.${RESET}"
+#     echo -e "${YELLOW}[*] Installing core packages and dependencies...${RESET}"
+install_core_packages() {
+    echo -e "${YELLOW}[*] Installing core packages and dependencies...${RESET}"
+    PKG_MANAGER="pkg"
+    if ! command -v pkg &>/dev/null; then
+        PKG_MANAGER="apt"
+        echo -e "${YELLOW}[!] Using apt package manager (non-Termux environment)${RESET}"
+    fi
+    # Update packages first with timeout and error handling
+    echo -e "${CYAN}[*] Updating package lists...${RESET}"
+    if ! timeout 300 $PKG_MANAGER update -y 2>/dev/null; then
+        echo -e "${YELLOW}[!] Package update failed or timed out, continuing...${RESET}"
+    fi
+    if ! timeout 600 $PKG_MANAGER upgrade -y 2>/dev/null; then
+        echo -e "${YELLOW}[!] Package upgrade failed or timed out, continuing...${RESET}"
+    fi
+    # Install essential packages with better error handling
+    local essential_packages=(git wget curl python ruby tsu sudo nmap hydra aircrack-ng metasploit hashcat john sqlmap nikto)
+    local failed_packages=()
+    for pkg in "${essential_packages[@]}"; do
+        if ! timeout 300 $PKG_MANAGER install -y "$pkg"; then
+            echo -e "${YELLOW}[!] Failed to install $pkg, continuing...${RESET}"
+            failed_packages+=("$pkg")
+        fi
+    done
+    # Report failed installations
+    if [ ${#failed_packages[@]} -gt 0 ]; then
+        echo -e "${YELLOW}[!] Failed to install: ${failed_packages[*]}${RESET}"
+        echo -e "${YELLOW}[!] You may need to install these manually later${RESET}"
+    fi
+    # Install pip and python modules
+    if command -v pip &>/dev/null; then
+        if ! pip install --upgrade pip; then
+            echo -e "${YELLOW}[!] Pip upgrade failed, continuing...${RESET}"
+        fi
+        if ! pip install brut3k1t; then
+            echo -e "${YELLOW}[!] Python module installation failed, continuing...${RESET}"
+        fi
+    fi
+    # Install Ruby gems
+    if command -v gem &>/dev/null; then
+        local ruby_gems=(wpscan evil-winrm metasploit-framework snmp)
+        for gem in "${ruby_gems[@]}"; do
+            if ! gem list | grep -q $gem; then
+                if ! gem install $gem --no-document; then
+                    echo -e "${YELLOW}[!] Failed to install Ruby gem $gem, continuing...${RESET}"
+                else
+                    echo -e "${GREEN}[✓] Successfully installed Ruby gem $gem${RESET}"
+                fi
+            else
+                echo -e "${GREEN}[✓] Ruby gem $gem is already installed${RESET}"
+            fi
+        done
+    fi
+    # Install searchsploit (exploitdb)
+    if ! command -v searchsploit &>/dev/null; then
+        echo -e "${YELLOW}[*] Installing searchsploit (exploitdb)...${RESET}"
+        if ! git clone https://github.com/OffensiveSecurity/exploitdb.git /opt/exploitdb; then
+            echo -e "${YELLOW}[!] Searchsploit installation failed, continuing...${RESET}"
+        else
+            ln -s /opt/exploitdb/searchsploit /usr/local/bin/searchsploit 2>/dev/null || true
+            echo -e "${GREEN}[✓] Searchsploit installed successfully.${RESET}"
+        fi
+    fi
+    echo -e "${GREEN}[✓] Core packages and dependencies installation completed.${RESET}"
+    echo -e "${RED}[✗] Please ensure you are in the correct directory.${RESET}"
+}
+# Call the function to execute the installation
+install_core_packages() {
+    echo -e "${YELLOW}[*] Installing core packages and dependencies...${RESET}"
+    PKG_MANAGER="pkg"
+    if ! command -v pkg &>/dev/null; then
+        PKG_MANAGER="apt"
+        echo -e "${YELLOW}[!] Using apt package manager (non-Termux environment)${RESET}"
+    fi
+    # Update packages first with timeout and error handling
+    echo -e "${CYAN}[*] Updating package lists...${RESET}"
+    if ! timeout 300 $PKG_MANAGER update -y 2>/dev/null; then
+        echo -e "${YELLOW}[!] Package update failed or timed out, continuing...${RESET}"
+    fi
+    if ! timeout 600 $PKG_MANAGER upgrade -y 2>/dev/null; then
+        echo -e "${YELLOW}[!] Package upgrade failed or timed out, continuing...${RESET}"
+    fi
+    # Install essential packages with better error handling
+    local essential_packages=(git wget curl python ruby tsu sudo nmap hydra aircrack-ng metasploit hashcat john sqlmap nikto)
+    local failed_packages=()
+    for pkg in "${essential_packages[@]}"; do
+        if ! timeout 300 $PKG_MANAGER install -y "$pkg"; then
+            echo -e "${YELLOW}[!] Failed to install $pkg, continuing...${RESET}"
+            failed_packages+=("$pkg")
+        else
+            echo -e "${GREEN}[✓] Successfully installed $pkg${RESET}"
+        fi
+    done
+    # Report failed installations
+    if [ ${#failed_packages[@]} -gt 0 ]; then
+        echo -e "${YELLOW}[!] Failed to install: ${failed_packages[*]}${RESET}"
+        echo -e "${YELLOW}[!] You may need to install these manually later${RESET}"
+    fi
+    # gracefully handle pip and python modules
+    if command -v pip &>/dev/null; then
+        if ! pip install --upgrade pip; then
+            echo -e "${YELLOW}[!] Pip upgrade failed, continuing...${RESET}"
+        fi
+        if ! pip install brut3k1t; then
+            echo -e "${YELLOW}[!] Python module installation failed, continuing...${RESET}"
+        else
+            echo -e "${GREEN}[✓] Successfully installed Python module brut3k1t${RESET}"
+        fi
+    else
+        echo -e "${YELLOW}[!] Pip is not installed, skipping Python module installation${RESET}"
+    fi
+    # command -v gem &>/dev/null; then
+        local ruby_gems=(wpscan evil-winrm metasploit-framework snmp)
+        for gem in "${ruby_gems[@]}"; do
+            if ! gem list | grep -q $gem; then
+                if ! gem install $gem --no-document; then
+                    echo -e "${YELLOW}[!] Failed to install Ruby gem $gem, continuing...${RESET}"
+                else
+                    echo -e "${GREEN}[✓] Successfully installed Ruby gem $gem${RESET}"
+                fi
+            else
+                echo -e "${GREEN}[✓] Ruby gem $gem is already installed${RESET}"
+            fi
+        done
+    else
+        echo -e "${YELLOW}[!] Ruby is not installed, skipping Ruby gem installation${RESET}"
+    fi
+    # command -v searchsploit &>/dev/null; then
+        echo -e "${YELLOW}[*] Installing searchsploit (exploitdb)...${RESET}"
+        if ! git clone https://github.com/OffensiveSecurity/exploitdb.git /opt/exploitdb; then
+            echo -e "${YELLOW}[!] Searchsploit installation failed, continuing...${RESET}"
+        else
+            ln -s /opt/exploitdb/searchsploit /usr/local/bin/searchsploit 2>/dev/null || true
+            echo -e "${GREEN}[✓] Searchsploit installed successfully.${RESET}"
+        fi
+    fi
+    echo -e "${GREEN}[✓] Core packages and dependencies installation completed.${RESET}"
+    echo -e "${RED}[✗] Please ensure you are in the correct directory.${RESET}"
+}
+# command find -type f -name "auto_install.sh" -execdir bash {} \;
+# Call the function to execute the installation
+install_core_packages() {
+    echo -e "${YELLOW}[*] Installing core packages and dependencies...${RESET}"
+    PKG_MANAGER="pkg"
+    if ! command -v pkg &>/dev/null; then
+        PKG_MANAGER="apt"
+        echo -e "${YELLOW}[!] Using apt package manager (non-Termux environment)${RESET}"
+    fi
+    # Update packages first with timeout and error handling
+    echo -e "${CYAN}[*] Updating package lists...${RESET}"
+    if ! timeout 300 $PKG_MANAGER update -y 2>/dev/null; then
+        echo -e "${YELLOW}[!] Package update failed or timed out, continuing...${RESET}"
+    fi
+    if ! timeout 600 $PKG_MANAGER upgrade -y 2>/dev/null; then
+        echo -e "${YELLOW}[!] Package upgrade failed or timed out, continuing...${RESET}"
+    fi
+    # Install essential packages with better error handling
+    local essential_packages=(git wget curl python ruby tsu sudo nmap hydra aircrack-ng metasploit hashcat john sqlmap nikto)
+    local failed_packages=()
+    for pkg in "${essential_packages[@]}"; do
+        if ! timeout 300 $PKG_MANAGER install -y "$pkg"; then
+            echo -e "${YELLOW}[!] Failed to install $pkg, continuing...${RESET}"
+            failed_packages+=("$pkg")
+        else
+            echo -e "${GREEN}[✓] Successfully installed $pkg${RESET}"
+        fi
+    done
+    # commands -grep -trusted permissions -su - <user> ensure complete compliance and security and not logged out
+    if [ ${#failed_packages[@]} -gt 0 ]; then
+        echo -e "${YELLOW}[!] Failed to install: ${failed_packages[*]}${RESET}"
+        echo -e "${YELLOW}[!] You may need to install these manually later${RESET}"
+    fi
+    # automatically but manually install su <user> and ensure complete compliance and security
+    if command -v pip &>/dev/null; then
+        if ! pip install --upgrade pip; then
+            echo -e "${YELLOW}[!] Pip upgrade failed, continuing...${RESET}"
+        fi
+        if ! pip install brut3k1t; then
+            echo -e "${YELLOW}[!] Python module installation failed, continuing...${RESET}"
+        else
+            echo -e "${GREEN}[✓] Successfully installed Python module brut3k1t${RESET}"
+        fi
+    else
+        echo -e "${YELLOW}[!] Pip is not installed, skipping Python module installation${RESET}"
+    fi
+    # command -v gem &>/dev/null; then
+        local ruby_gems=(wpscan evil-winrm metasploit-framework snmp)
+        for gem in "${ruby_gems[@]}"; do
+            if ! gem list | grep -q $gem; then
+                if ! gem install $gem --no-document; then
+                    echo -e "${YELLOW}[!] Failed to install Ruby gem $gem, continuing...${RESET}"
+                else
+                    echo -e "${GREEN}[✓] Successfully installed Ruby gem $gem${RESET}"
+                fi
+            else
+                echo -e "${GREEN}[✓] Ruby gem $gem is already installed${RESET}"
+            fi
+        done
+    else
+        echo -e "${YELLOW}[!] Ruby is not installed, skipping Ruby gem installation${RESET}"
+    fi
+    # command -v searchsploit &>/dev/null; then
+        echo -e "${YELLOW}[*] Installing searchsploit (exploitdb)...${RESET}"
+        if ! git clone https://github.com/OffensiveSecurity/exploitdb.git /opt/exploitdb; then
+            echo -e "${YELLOW}[!] Searchsploit installation failed, continuing...${RESET}"
+        else
+            ln -s /opt/exploitdb/searchsploit /usr/local/bin/searchsploit 2>/dev/null || true
+            echo -e "${GREEN}[✓] Searchsploit installed successfully.${RESET}"
+        fi
+    fi
+    echo -e "${GREEN}[✓] Core packages and dependencies installation completed.${RESET}"
+    echo -e "${RED}[✗] Please ensure you are in the correct directory.${RESET}"
+}
+# command find -type f -name "auto_install.sh" -execdir bash {} \;
+# Call the function to execute the installation
+install_core_packages() {
+    echo -e "${YELLOW}[*] Installing core packages and dependencies...${RESET}"
+    PKG_MANAGER="pkg"
+    if ! command -v pkg &>/dev/null; then
+        PKG_MANAGER="apt"
+        echo -e "${YELLOW}[!] Using apt package manager (non-Termux environment)${RESET}"
+    fi
+    # Update packages first with timeout and error handling
+    echo -e "${CYAN}[*] Updating package lists...${RESET}"
+    if ! timeout 300 $PKG_MANAGER update -y 2>/dev/null; then
+        echo -e "${YELLOW}[!] Package update failed or timed out, continuing...${RESET}"
+    fi
+    if ! timeout 600 $PKG_MANAGER upgrade -y 2>/dev/null; then
+        echo -e "${YELLOW}[!] Package upgrade failed or timed out, continuing...${RESET}"
+    fi
+    # Install essential packages with better error handling
+    local essential_packages=(git wget curl python ruby tsu sudo nmap hydra aircrack-ng metasploit hashcat john sqlmap nikto)
+    local failed_packages=()
+    for pkg in "${essential_packages[@]}"; do
+        if ! timeout 300 $PKG_MANAGER install -y "$pkg"; then
+            echo -e "${YELLOW}[!] Failed to install $pkg, continuing...${RESET}"
+            failed_packages+=("$pkg")
+        else
+            echo -e "${GREEN}[✓] Successfully installed $pkg${RESET}"
+        fi
+    done
+    # commands -grep -trusted permissions -su - <user> ensure complete compliance and security and not logged out
+    if [ ${#failed_packages[@]} -gt 0 ]; then
+        echo -e "${YELLOW}[!] Failed to install: ${failed_packages[*]}${RESET}"
+        echo -e "${YELLOW}[!] You may need to install these manually later${RESET}"
+    fi
+    # automatically but manually install su <user> and ensure complete compliance and security
+    if command -v pip &>/dev/null; then
+        if ! pip install --upgrade pip; then
+            echo -e "${YELLOW}[!] Pip upgrade failed, continuing...${RESET}"
+        fi
+        if ! pip install brut3k1t; then
+            echo -e "${YELLOW}[!] Python module installation failed, continuing...${RESET}"
+        else
+            echo -e "${GREEN}[✓] Successfully installed Python module brut3k1t${RESET}"
+        fi
+    else
+        echo -e "${YELLOW}[!] Pip is not installed, skipping Python module installation${RESET}"
+    fi
+    # command -v gem &>/dev/null; then
+        local ruby_gems=(wpscan evil-winrm metasploit-framework snmp)
+        for gem in "${ruby_gems[@]}"; do
+            if ! gem list | grep -q $gem; then
+                if ! gem install $gem --no-document; then
+                    echo -e "${YELLOW}[!] Failed to install Ruby gem $gem, continuing...${RESET}"
+                else
+                    echo -e "${GREEN}[✓] Successfully installed Ruby gem $gem${RESET}"
+                fi
+            else
+                echo -e "${GREEN}[✓] Ruby gem $gem is already installed${RESET}"
+            fi
+        done
+    else
+        echo -e "${YELLOW}[!] Ruby is not installed, skipping Ruby gem installation${RESET}"
+    fi
+    # conferm terminal has been taken over by the script
+    if command -v searchsploit &>/dev/null; then
+        echo -e "${GREEN}[✓] Searchsploit is already installed${RESET}"
+    else
+        echo -e "${YELLOW}[*] Installing searchsploit (exploitdb)...${RESET}"
+        if ! git clone https://github.com/OffensiveSecurity/exploitdb.git /opt/exploitdb; then
+            echo -e "${RED}[✗] Failed to install searchsploit (exploitdb)${RESET}"
+        else
+            echo -e "${GREEN}[✓] Successfully installed searchsploit (exploitdb)${RESET}"
+        fi
+        ln -s /opt/exploitdb/searchsploit /usr/local/bin/searchsploit 2>/dev/null || true
+    fi
+    echo -e "${GREEN}[✓] Core packages and dependencies installation completed.${RESET}"
+    echo -e "${RED}[✗] Please ensure you are in the correct directory.${RESET}"
+}
+# run services for connection and security flowmanagement
+install_core_packages() {
+    echo -e "${YELLOW}[*] Installing core packages and dependencies...${RESET}"
+    PKG_MANAGER="pkg"
+    if ! command -v pkg &>/dev/null; then
+        PKG_MANAGER="apt"
+        echo -e "${YELLOW}[!] Using apt package manager (non-Termux environment)${RESET}"
+    fi
+    # terminal is now Bug-hunt
+    # commands are as follows
+    echo -e "${CYAN}[*] Updating package lists...${RESET}"
+    if ! timeout 300 $PKG_MANAGER update -y 2>/dev/null; then
+        echo -e "${YELLOW}[!] Package update failed or timed out, continuing...${RESET}"
+    fi
+    if ! timeout 600 $PKG_MANAGER upgrade -y 2>/dev/null; then
+        echo -e "${YELLOW}[!] Package upgrade failed or timed out, continuing...${RESET}"
+    fi
+    # command list
+    local commands=(hunt install hunt hunt update hunt upgrade hunt remove hunt search hunt list hunt info hunt help hunt version hunt config hunt status hunt log hunt clear hunt reset hunt restart hunt stop hunt start hunt enable hunt disable hunt status hunt info hunt help hunt scan hunt exploit hunt payload hunt module hunt script hunt tool hunt service hunt daemon hunt process hunt job hunt task hunt cron hunt schedule hunt timer hunt event hunt trigger hunt action hunt rule hunt policy hunt setting hunt option hunt parameter hunt variable hunt constant hunt flag hunt switch hunt case hunt branch hunt loop hunt condition hunt if hunt else hunt elif hunt switch hunt case hunt default hunt break hunt continue hunt return hunt exit hunt quit hunt abort hunt fail hunt error hunt warning hunt notice hunt info hunt debug hunt trace hunt loghunt loglevel hunt logformat hunt logrotate hunt logarchive hunt logcompress hunt logsize hunt logpath hunt logfilehunt loghandlerhunt logfilterhunt logformatter hunt logparser hunt logviewer hunt logviewer hunt logviewer hunt logviewer hunt logviewer hunt logviewer hunt logviewer hunt logviewer hunt logviewer hunt logviewer hunt logviewer hunt logviewer hunt logviewer hunt logviewer hunt logviewer hunt logviewer hunt logviewer hunt logviewer hunt logviewer hunt logviewer hunt logviewer hunt logviewer hunt logviewer hunt logviewer hunt logviewer hunt logviewer hunt logviewer hunt logviewer hunt logviewer hunt logviewer hunt logviewer hunt logviewer hunt fix hunt fix hunt patch hunt update hunt upgrade hunt remove hunt install hunt search hunt list hunt info hunt help hunt version hunt config hunt status hunt loghunt clearhunt resethunt restarthunt stophunt starthunt enablehunt disablehunt statushunt infohunt helphunt scanhunt exploiithunt payloadhunt modulehunt scripthunt toolhunt servicehunt daemonhunt processhunt jobhunt taskhunt cronhunt schedulehunt timerhunteventhuntt triggerhuntt actionhuntrulehuntt policyhuntt settinghuntt optionhuntt parameterhuntt variablehuntt constanthuntt flaghuntt switchhuntt casehuntt branchhuntt loophuntt conditionhuntt ifhuntt elsehuntt elifhuntswitchcasehuntt defaulthunt breakhunte continuehunte returnhunte exithunte quithunte aborthunte failhunte errorhunte warninghunte noticehunte infohuntedebughunte tracehunte loghunter loglevelhunter logformathunter logrotatehunter logarchivehunter logcompresshunter logsizehunter logpathhunter logfilehunter loghandlerhunter logfilterhunter logformatterhunter logparserhunter logviewerhunter logviewerhunter logviewerhunter logviewerhunter logviewerhunter logviewerhunter logviewerhunter logviewerhunter logviewerhunter logviewerhunter logviewerhunter logviewerhunter logviewerhunter)
+    local failed_commands=()
+    for cmd in "${commands[@]}"; do
+        if ! timeout 300 $PKG_MANAGER install -y "$cmd"; then
+            echo -e "${YELLOW}[!] Failed to install $cmd, continuing...${RESET}"
+            failed_commands+=("$cmd")
+        else
+            echo -e "${GREEN}[✓] Successfully installed $cmd${RESET}"
+        fi
+    done
+    # Report failed installations
+    if [ ${#failed_commands[@]} -gt 0 ]; then
+        echo -e "${YELLOW}[!] Failed to install: ${failed_commands[*]}${RESET}"
+        echo -e "${YELLOW}[!] You may need to install these manually later${RESET}"
+    fi
+    # pip fix commands for Bug-hunt
+    if command -v pip &>/dev/null; then
+        if ! pip install --upgrade pip; then
+            echo -e "${YELLOW}[!] Pip upgrade failed, continuing...${RESET}"
+        fi
+        if ! pip install brut3k1t; then
+            echo -e "${YELLOW}[!] Python module installation failed, continuing...${RESET}"
+        else
+            echo -e "${GREEN}[✓] Successfully installed Python module brut3k1t${RESET}"
+        fi
+    else
+        echo -e "${YELLOW}[!] Pip is not installed, skipping Python module installation${RESET}"
+    fi
+    # Ruby gem fix commands for Bug-hunt
+    if command -v gem &>/dev/null; then
+        local ruby_gems=(wpscan evil-winrm metasploit-framework snmp)
+        for gem in "${ruby_gems[@]}"; do
+            if ! gem list | grep -q $gem; then
+                if ! gem install $gem --no-document; then
+                    echo -e "${YELLOW}[!] Failed to install Ruby gem $gem, continuing...${RESET}"
+                else
+                    echo -e "${GREEN}[✓] Successfully installed Ruby gem $gem${RESET}"
+                fi
+            else
+                echo -e "${GREEN}[✓] Ruby gem $gem is already installed${RESET}"
+            fi
+        done
+    else
+        echo -e "${YELLOW}[!] Ruby is not installed, skipping Ruby gem installation${RESET}"
+    fi
+    # Searchsploit (exploitdb) fix commands for Bug-hunt
+    if command -v searchsploit &>/dev/null; then
+        echo -e "${GREEN}[✓] Searchsploit is already installed${RESET}"
+    else
+        echo -e "${YELLOW}[*] Installing searchsploit (exploitdb)...${RESET}"
+        if ! git clone https://github.com/OffensiveSecurity/exploitdb.git /opt/exploitdb; then
+            echo -e "${YELLOW}[!] Failed to install searchsploit (exploitdb), continuing...${RESET}"
+        else
+            echo -e "${GREEN}[✓] Successfully installed searchsploit (exploitdb)${RESET}"
+        fi
+        ln -s /opt/exploitdb/searchsploit /usr/local/bin/searchsploit 2>/dev/null || true
+    fi
+    echo -e "${GREEN}[✓] Core packages and dependencies installation completed.${RESET}"
+    echo -e "${RED}[✗] Please ensure you are in the correct directory.${RESET}"
+}
+# build jack of all trades and install all packages
+command function build_jack_of_all_trades() {
+    echo -e "${YELLOW}[*] Building Jack of All Trades and installing all packages...${RESET}"
+    PKG_MANAGER="pkg"
+    if ! command -v pkg &>/dev/null; then
+        PKG_MANAGER="apt"
+        echo -e "${YELLOW}[!] Using apt package manager (non-Termux environment)${RESET}"
+    do build_jack_of_all_trades_packages_and_dependencies() {
+        echo -e "${CYAN}[*] Updating package lists...${RESET}"
+        if ! timeout 300 $PKG_MANAGER update -y 2>/dev/null; then
+            echo -e "${YELLOW}[!] Package update failed or timed out, continuing...${RESET}"
+        fi
+        if ! timeout 600 $PKG_MANAGER upgrade -y 2>/dev/null; then
+            echo -e "${YELLOW}[!] Package upgrade failed or timed out, continuing...${RESET}"
+        fi
+        # Install essential packages with better error handling
+        local essential_packages=( git wget curl python ruby tsu sudo nmap hydra aircrack-ng metasploit hashcat john sqlmap nikto)
+        local essential_dependencies=(build-essential libssl-dev libffi-dev python3-dev libxml2-dev libxslt1-dev zlib1g-dev libjpeg-dev libpq-dev libsqlite3-dev libmysqlclient-dev libcurl4-openssl-dev libreadline-dev libncurses5-dev libncursesw5-dev libtinfo-dev libgdbm-dev liblzma-dev libbz2-dev libexpat1-dev libmpdec-dev libffi-dev libxml2-dev libxslt1-dev)
+        # build if need to
+        echo -e "${YELLOW}[*] Installing essential packages...${RESET}"
+        if ! timeout 440 $PKG_MANAGER install -y "${essential_packages[@]}"; then
+            echo -e "${YELLOW}[!] Essential package installation failed or timed out, continuing...${RESET}"
+        else
+            echo -e "${GREEN}[✓] Essential packages installed successfully.${RESET}"
+        fi
+        # Install essential dependencies with better error handling
+        echo -e "${YELLOW}[*] Installing essential dependencies...${RESET}"
+        if ! timeout 480 $PKG_MANAGER install -y "${essential_dependencies[@]}"; then
+            echo -e "${YELLOW}[!] Essential dependencies installation failed or timed out, continuing...${RESET}"
+        else
+            echo -e "${GREEN}[✓] Essential dependencies installed successfully.${RESET}"
+        fi
+        # Install each essential package with timeout and error handling
+        echo -e "${YELLOW}[*] Installing essential packages with timeout and error handling...${RESET}"
+        fi
+        local failed_packages=()
+        for pkg in "${essential_packages[@]}"; do
+            if ! timeout 300 $PKG_MANAGER install -y "$pkg"; then
+                echo -e "${YELLOW}[!] Failed to install $pkg, continuing...${RESET}"
+                failed_packages+=("$pkg")
+            else
+                echo -e "${GREEN}[✓] Successfully installed $pkg${RESET}"
+            fi
+        done
+        # Report failed installations
+        if [ ${#failed_packages[@]} -gt 0 ]; then
+            echo -e "${YELLOW}[!] Failed to install: ${failed_packages[*]}${RESET}"
+            echo -e "${YELLOW}[!] You may need to install these manually later${RESET}"
+        fi
+    }
