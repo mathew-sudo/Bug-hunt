@@ -1,0 +1,1321 @@
+#!/bin/bash
+# Bug-hunt is a bug-hunting tool it is intended to track&locate bugs in programes & scripts & terminals then auto fix them.
+# Bug-hunt track errors & bugs
+# Bug-hunt locate & fix those errors & bugs & broken programes & code
+# this script is for repar and bug tracking and locating and fixing broken programes and code
+# Display a banner with information about the tool
+
+Display_banner() {
+    echo -e "\033[1;34m===========================================\033[0m"
+    echo -e "\033[1;34m          Bug-hunt Tool v1.0               \033[0m"
+    echo -e "\033[1;34m===========================================\033[0m"
+    echo -e "\033[1;32mBug-hunt is a bug-hunting tool designed to track, locate, and fix bugs in programs, scripts, and terminals.\033[0m"
+    echo -e "\033[1;32mIt automatically tracks errors and bugs, locates them, and attempts to fix broken programs and code.\033[0m"
+    echo -e "\033[1;34m===========================================\033[0m"
+}
+# Define color codes for better readability
+Display_banner=""
+CYAN="\033[1;36m"  # Cyan color for informational messages
+YELLOW="\033[1;33m"  # Yellow color for warnings
+GREEN="\033[1;32m"  # Green color for success messages
+RED="\033[1;31m"   # Red color for errors
+color="\033[1;34m"  # Blue color for the banner
+reset="\033[0m"    # Reset color
+
+# Display the banner
+Display_banner=Display_banner*"${color}"
+echo -e "${color}==========================================="
+echo -e "${color}          Bug-hunt Tool v1.0               ${reset}"
+echo -e "${color}==========================================="
+echo -e "${color}Bug-hunt is a bug-hunting tool designed to track, locate, and fix bugs in programs, scripts, and terminals.${reset}"
+echo -e "${color}It automatically tracks errors and bugs, locates them, and attempts to fix broken programs and code.${reset}"
+echo -e "${color}===========================================${reset}"
+
+dir_path_create() {
+    # Create the directory if it doesn't exist
+    if [ ! -d "$1" ]; then
+        echo -e "${YELLOW}[!] Directory '$1' does not exist. Creating it...${RESET}"
+        mkdir -p "$1" || {
+            echo -e "${RED}[✗] Error: Failed to create directory '$1'.${RESET}"
+            exit 1
+        }
+        echo -e "${GREEN}[✓] Directory '$1' created successfully!${RESET}"
+    else
+        echo -e "${GREEN}[✓] Directory '$1' already exists.${RESET}"
+    fi
+}
+# dir_path_create "$HOME/Bug_hunt"
+dir_full_path() {
+    # Get the full path of the directory
+    if [ -d "$1" ]; then
+        echo -e "${GREEN}[✓] Full path of '$1': $(realpath "$1")${RESET}"
+        # directory contents
+        echo -e "${CYAN}[*] Directory contents:${RESET}"
+        ls -1 "$1"
+    # Check if the directory exists
+    elif [ -e "$1" ]; then
+        echo -e "${YELLOW}[!] '$1' is not a directory, but it exists.${RESET}"
+        echo -e "${GREEN}[✓] Full path: $(realpath "$1")${RESET}"
+    # If the directory does not exist
+    elif [ ! -e "$1" ]; then
+        echo -e "${RED}[✗] Error: Directory '$1' does not exist.${RESET}"
+        echo -e "${YELLOW}[!] Please create the directory first.${RESET}"
+        [ -d "$1" ] || {
+            echo -e "${YELLOW}[!] Creating directory '$1'...${RESET}"
+            mkdir -p "$1" || {
+                echo -e "${RED}[✗] Error: Failed to create directory '$1'.${RESET}"
+                exit 1
+            }
+            echo -e "${GREEN}[✓] Directory '$1' created successfully!${RESET}"
+        }
+    fi
+}
+# Check if the Bug-hunt script exists
+check_if_bug_hunt_script_exists() {
+    if [ -f "bug_hunt.sh" ]; then
+        echo -e "${GREEN}[✓] Bug-hunt script found.${RESET}"
+    else
+        echo -e "${RED}[✗] Error: Bug-hunt script not found!${RESET}"
+        echo -e "${YELLOW}[!] Please make sure 'bug_hunt.sh' is in the current directory.${RESET}"
+        exit 1
+    fi
+    echo -e "${GREEN}[✓] Bug-hunt script found. Proceeding with installation...${RESET}"
+}
+# Check if the script is run as root
+if [ "$(id -u)" -eq 0 ]; then
+    echo -e "${YELLOW}[!] Warning: Running as root can be dangerous. Proceed with caution!${RESET}"
+    read -p "Continue as root? [y/N]: " -y 1 -r
+    # Prompt the user for confirmation
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo -s "${RED}[!] Installation proceeding by user.${RESET}"
+        exit 1
+else
+    echo -e "${GREEN}[✓] Running as root user.${RESET}"
+    # Install core packages and dependencies
+    install_core_packages() {
+        echo -e "${YELLOW}[*] Installing core packages and dependencies...${RESET}"
+        # Define essential packages
+        essential_packages=(
+            "git"
+            "curl"
+            "wget"
+            "python3"
+            "python3-pip"
+            "build-essential"
+            "gcc"
+            "g++"
+            "make"
+            "libssl-dev"
+            "libffi-dev"
+            "python3-dev"
+        )
+        # Install essential packages
+        for package in "${essential_packages[@]}"; do
+            echo -e "${CYAN}[+] Installing $package...${RESET}"
+            apt-get install -y "$package" || {
+                echo -e "${RED}[✗] Error: Failed to install $package.${RESET}"
+                exit 1
+            }
+        done
+        echo -e "${GREEN}[✓] Core packages and dependencies installed successfully!${RESET}"
+fi
+    }
+    echo -e "${GREEN}[✓] Installation proceeding as user.${RESET}"
+    install_core_packages() {
+        echo -e "${YELLOW}[*] Installing core packages and dependencies...${RESET}"
+        # Define essential packages
+        essential_packages=(
+            "git"
+            "curl"
+            "wget"
+            "python3"
+            "python3-pip"
+            "build-essential"
+            "gcc"
+        )
+        # Install essential packages
+        for package in "${essential_packages[@]}"; do
+            echo -e "${CYAN}[+] Installing $package...${RESET}"
+            apt-get install -y "$package" || {
+                echo -e "${RED}[✗] Error: Failed to install $package.${RESET}"
+                exit 1
+            }
+        done
+        echo -e "${GREEN}[✓] Core packages and dependencies installed successfully!${RESET}"
+        # Install essential packages
+        for package in "${essential_packages[@]}"; do
+            echo -e "${CYAN}[+] Installing $package...${RESET}"
+            apt-get install -y "$package" || {
+                echo -e "${RED}[✗] Error: Failed to install $package.${RESET}"
+                exit 1
+            }
+        done
+        echo -e "${GREEN}[✓] Core packages and dependencies installed successfully!${RESET}"
+# Check if the script is run in Termux environment
+if [ ! -d "/data/data/com.termux" ]; then
+    echo -e "${YELLOW}[!] Warning: This script is designed for Termux but may work on other Linux systems.${RESET}"
+    echo -e "${YELLOW}[!] Some tools and configurations may not work as expected outside of Termux.${RESET}"
+    read -p "Continue anyway? [y/N]: " -y 1 -r
+    echo
+    
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo -e "${RED}[!] Installation cancelled by user.${RESET}"
+        exit 1
+    fi
+    echo -e "${GREEN}[✓] Continuing with standard Linux installation...${RESET}"
+else
+    echo -e "${GREEN}[✓] Termux environment detected.${RESET}"
+fi
+# Check if the script is run in a supported shell
+if [ -z "$BASH_VERSION" ]; then
+    echo -e "${RED}[✗] Error: This script requires Bash to run.${RESET}"
+    echo -e "${YELLOW}[!] Please run this script in a Bash shell.${RESET}"
+    exit 1
+fi
+# Check if the script is run in a supported terminal
+if [ -z "$TERM" ]; then
+    echo -e "${RED}[✗] Error: This script requires a terminal to run.${RESET}"
+    echo -e "${YELLOW}[!] Please run this script in a terminal emulator.${RESET}"
+    exit 1
+fi
+# Check if the script is run in a supported operating system
+if [ "$(uname -s)" != "Linux" ]; then
+    echo -e "${RED}[✗] Error: This script is designed for Linux systems.${RESET}"
+    echo -e "${YELLOW}[!] Please run this script on a Linux-based operating system.${RESET}"
+    exit 1
+fi
+# Check if the script is run in a supported architecture
+if [ "$(uname -m)" != "x86_64" ] && [ "$(uname -m)" != "aarch64" ]; then
+    echo -e "${RED}[✗] Error: This script is designed for x86_64 or aarch64 architectures.${RESET}"
+    echo -e "${YELLOW}[!] Please run this script on a compatible architecture.${RESET}"
+    exit 1
+fi
+# Check if the script is run in a supported distribution
+if [ -f "/etc/os-release" ]; then
+    . /etc/os-release
+    if [[ "$ID" != "debian" && "$ID" != "ubuntu" && "$ID" != "fedora" && "$ID" != "arch" && "$ID" != "termux" ]]; then
+        echo -e "${RED}[✗] Error: This script is designed for Debian, Ubuntu, Fedora, Arch, or Termux distributions.${RESET}"
+        echo -e "${YELLOW}[!] Please run this script on a compatible distribution.${RESET}"
+        exit 1
+    fi
+else
+    echo -e "${YELLOW}[!] Warning: Unable to detect the operating system version.${RESET}"
+    echo -e "${YELLOW}[!] Proceeding with installation, but some features may not work as expected.${RESET}"
+fi
+# Check if the script is run in a supported terminal emulator
+if [ -z "$TERM_PROGRAM" ]; then
+    echo -e "${YELLOW}[!] Warning: Unable to detect the terminal emulator.${RESET}"
+    echo -e "${YELLOW}[!] Proceeding with installation, but some features may not work as expected.${RESET}"
+else
+    case "$TERM_PROGRAM" in
+        "Termux" | "xterm" | "gnome-terminal" | "konsole" | "xterm-256color")
+            echo -e "${GREEN}[✓] Supported terminal emulator detected: $TERM_PROGRAM.${RESET}"
+            ;;
+        *)
+            echo -e "${YELLOW}[!] Warning: Unsupported terminal emulator detected: $TERM_PROGRAM.${RESET}"
+            echo -e "${YELLOW}[!] Some features may not work as expected.${RESET}"
+            ;;
+    esac
+fi
+# Check if the script is run in a supported shell version
+if [ -n "$BASH_VERSION" ]; then
+    if [[ "$BASH_VERSION" < "4.0" ]]; then
+        echo -e "${RED}[✗] Error: This script requires Bash version 4.0 or higher.${RESET}"
+        echo -e "${YELLOW}[!] Please update your Bash shell to a newer version.${RESET}"
+        exit 1
+    else
+        echo -e "${GREEN}[✓] Supported Bash version detected: $BASH_VERSION.${RESET}"
+    fi
+else
+    echo -e "${RED}[✗] Error: This script requires Bash to run.${RESET}"
+    echo -e "${YELLOW}[!] Please run this script in a Bash shell.${RESET}"
+    exit 1
+fi
+# Check if the script is run in a supported terminal type
+if [ -n "$TERM" ]; then
+    case "$TERM" in
+        "xterm" | "xterm-256color" | "screen" | "tmux" | "linux")
+            echo -e "${GREEN}[✓] Supported terminal type detected: $TERM.${RESET}"
+            ;;
+        *)
+            echo -e "${YELLOW}[!] Warning: Unsupported terminal type detected: $TERM.${RESET}"
+            echo -e "${YELLOW}[!] Some features may not work as expected.${RESET}"
+            ;;
+    esac
+else
+    echo -e "${RED}[✗] Error: Unable to detect the terminal type.${RESET}"
+    echo -e "${YELLOW}[!] Please run this script in a terminal emulator.${RESET}"
+    exit 1
+fi
+# Check if the script is run in a supported terminal size
+if [ -n "$COLUMNS" ] && [ -n "$LINES" ]; then
+    if [ "$COLUMNS" -lt 80 ] || [ "$LINES" -lt 24 ]; then
+        echo -e "${YELLOW}[!] Warning: Terminal size is too small (${COLUMNS}x${LINES}).${RESET}"
+        echo -e "${YELLOW}[ !] Some features may not work as expected.${RESET}"
+    else
+        echo -e "${GREEN}[✓] Supported terminal size detected: ${COLUMNS}x${LINES}.${RESET}"
+    fi
+else
+    echo -e "${YELLOW}[!] Warning: Unable to detect the terminal size.${RESET}"
+    echo -e "${YELLOW}[!] Proceeding with installation, but some features may not work as expected.${RESET}"
+fi
+# Check if the script is run in a supported terminal encoding
+if [ -n "$LANG" ]; then
+    case "$LANG" in
+        "C.UTF-8" | "en_US.UTF-8" | "UTF-8")
+            echo -e "${GREEN}[✓] Supported terminal encoding detected: $LANG.${RESET}"
+            ;;
+        *)
+            echo -e "${YELLOW}[!] Warning: Unsupported terminal encoding detected: $LANG.${RESET}"
+            echo -e "${YELLOW}[!] Some features may not work as expected.${RESET}"
+            ;;
+    esac
+else
+    echo -e "${YELLOW}[!] Warning: Unable to detect the terminal encoding.${RESET}"
+    echo -e "${YELLOW}[!] Proceeding with installation, but some features may not work as expected.${RESET}"
+fi
+# Check if the script is run in a supported terminal capabilities
+if [ -n "$TERMINFO" ]; then
+    if [ -d "$TERMINFO" ]; then
+        echo -e "${GREEN}[✓] Supported terminal capabilities detected: $TERMINFO.${RESET}"
+    else
+        echo -e "${YELLOW}[!] Warning: Unable to detect terminal capabilities directory: $TERMINFO.${RESET}"
+        echo -e "${YELLOW}[!] Proceeding with installation, but some features may not work as expected.${RESET}"
+    fi
+else
+    echo -e "${YELLOW}[!] Warning: Unable to detect terminal capabilities.${RESET}"
+    echo -e "${YELLOW}[!] Proceeding with installation, but some features may not work as expected.${RESET}"
+fi
+# Check if the script is run in a supported terminal features
+if [ -n "$TERM_FEATURES" ]; then
+    case "$TERM_FEATURES" in
+        "color" | "utf8" | "resize")
+            echo -e "${GREEN}[✓] Supported terminal features detected: $TERM_FEATURES.${RESET}"
+            ;;
+        *)
+            echo -e "${YELLOW}[!] Warning: Unsupported terminal features detected: $TERM_FEATURES.${RESET}"
+            echo -e "${YELLOW}[!] Some features may not work as expected.${RESET}"
+            ;;
+    esac
+else
+    echo -e "${YELLOW}[!] Warning: Unable to detect terminal features.${RESET}"
+    echo -e "${YELLOW}[!] Proceeding with installation, but some features may not work as expected.${RESET}"
+fi
+# Check if the script is run in a supported terminal capabilities
+if [ -n "$TERMINFO" ]; then
+    if [ -d "$TERMINFO" ]; then
+        echo -e "${GREEN}[✓] Supported terminal capabilities detected: $TERMINFO.${RESET}"
+    else
+        echo -e "${YELLOW}[!] Warning: Unable to detect terminal capabilities directory: $TERMINFO.${RESET}"
+        echo -e "${YELLOW}[!] Proceeding with installation, but some features may not work as expected.${RESET}"
+    fi
+else
+    echo -e "${YELLOW}[!] Warning: Unable to detect terminal capabilities.${RESET}"
+    echo -e "${YELLOW}[!] Proceeding with installation, but some features may not work as expected.${RESET}"
+fi
+# Check if the script is run in a supported terminal features
+if [ -n "$TERM_FEATURES" ]; then
+    case "$TERM_FEATURES" in
+        "color" | "utf8" | "resize")
+            echo -e "${GREEN}[✓] Supported terminal features detected: $TERM_FEATURES.${RESET}"
+            ;;
+        *)
+            echo -e "${YELLOW}[!] Warning: Unsupported terminal features detected: $TERM_FEATURES.${RESET}"
+            echo -e "${YELLOW}[!] Some features may not work as expected.${RESET}"
+            ;;
+    esac
+else
+    echo -e "${YELLOW}[!] Warning: Unable to detect terminal features.${RESET}"
+    echo -e "${YELLOW}[!] Proceeding with installation, but some features may not work as expected.${RESET}"
+fi
+# Check if the script is run in a supported terminal capabilities
+if [ -n "$TERMINFO" ]; then
+    if [ -d "$TERMINFO" ]; then
+        echo -e "${GREEN}[✓] Supported terminal capabilities detected: $TERMINFO.${RESET}"
+    else
+        echo -e "${YELLOW}[!] Warning: Unable to detect terminal capabilities directory: $TERMINFO.${RESET}"
+        echo -e "${YELLOW}[!] Proceeding with installation, but some features may not work as expected.${RESET}"
+    fi
+else
+    echo -e "${YELLOW}[!] Warning: Unable to detect terminal capabilities.${RESET}"
+    echo -e "${YELLOW}[!] Proceeding with installation, but some features may not work as expected.${RESET}"
+fi
+# Check if the script is run in a supported terminal features
+if [ -n "$TERM_FEATURES" ]; then
+    case "$TERM_FEATURES" in
+        "color" | "utf8" | "resize")
+            echo -e "${GREEN}[✓] Supported terminal features detected: $TERM_FEATURES.${RESET}"
+            ;;
+        *)
+            echo -e "${YELLOW}[!] Warning: Unsupported terminal features detected: $TERM_FEATURES.${RESET}"
+            echo -e "${YELLOW}[!] Some features may not work as expected.${RESET}"
+            ;;
+    esac
+else
+    echo -e "${YELLOW}[!] Warning: Unable to detect terminal features.${RESET}"
+    echo -e "${YELLOW}[!] Proceeding with installation, but some features may not work as expected.${RESET}"
+fi
+# Check if Bug-hunt can detect and fix bugs
+if [ -f "bug_hunt.sh" ]; then
+    echo -e "${GREEN}[✓] Bug-hunt script found. Proceeding with bug detection and fixing...${RESET}"
+    # Make the Bug-hunt script executable if needed
+    if [ ! -x "bug_hunt.sh" ]; then
+        echo -e "${YELLOW}[!] Making the Bug-hunt script executable...${RESET}"
+        chmod +x bug_hunt.sh
+    fi
+    # Run the Bug-hunt script
+    echo -e "${GREEN}[✓] Running Bug-hunt script...${RESET}"
+    sudo bash ./bug_hunt.sh
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}[✓] Bug-hunt completed successfully!${RESET}"
+    else
+        echo -e "${RED}[✗] Error: Bug-hunt encountered an issue during execution.${RESET}"
+        echo -e "${YELLOW}[!] Please check the Bug-hunt script for errors or issues.${RESET}"
+        exit 1
+    fi
+else
+    echo -e "${RED}[✗] Error: Bug-hunt script not found!${RESET}"
+    echo -e "${YELLOW}[!] Please make sure 'bug_hunt.sh' is in the current directory.${RESET}"
+    exit 1
+fi
+# check if Bug-hunt can detect and fix errors & broken code
+if [ -f "bug_hunt.sh" ]; then
+    echo -e "${GREEN}[✓] Bug-hunt script found. Proceeding with error detection and fixing...${RESET}"
+    # Make the Bug-hunt script executable if needed
+    if [ ! -x "bug_hunt.sh" ]; then
+        echo -e "${YELLOW}[!] Making the Bug-hunt script executable...${RESET}"
+        chmod +x bug_hunt.sh
+    fi
+    # Run the Bug-hunt script
+    echo -e "${GREEN}[✓] Running Bug-hunt script...${RESET}"
+    sudo bash ./bug_hunt.sh
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}[✓] Bug-hunt completed successfully!${RESET}"
+    else
+        echo -e "${RED}[✗] Error: Bug-hunt encountered an issue during execution.${RESET}"
+        echo -e "${YELLOW}[!] Please check the Bug-hunt script for errors or issues.${RESET}"
+        exit 1
+    fi
+else
+    echo -e "${RED}[✗] Error: Bug-hunt script not found!${RESET}"
+    echo -e "${YELLOW}[!] Please make sure 'bug_hunt.sh' is in the current directory.${RESET}"
+    exit 1
+fi
+gather_and_mimic_terminal_utilities_and_tools_and_installed_exploits_and_tools_and_gems_to_use_in_own_terminal() {
+    echo -e "${GREEN}[✓] Gathering and mimicking terminal utilities, tools, and installed exploits...${RESET}"
+    # Mimic terminal utilities and tools
+    if [ -d "$HOME/.local/bin" ]; then
+        echo -e "${GREEN}[✓] Found local bin directory. Mimicking utilities...${RESET}"
+        cp -r "$HOME/.local/bin"/* /usr/local/bin/
+    else
+        echo -e "${YELLOW}[!] Warning: Local bin directory not found. Skipping utility mimicry.${RESET}"
+    fi
+    # Mimic installed exploits and tools
+    if [ -d "$HOME/.local/share/exploits" ]; then
+        echo -e "${GREEN}[✓] Found local share directory for exploits. Mimicking exploits...${RESET}"
+        cp -r "$HOME/.local/share/exploits"/* /usr/local/share/exploits/
+    else
+        echo -e "${YELLOW}[!] Warning: Local share directory for exploits not found. Skipping exploit mimicry.${RESET}"
+    fi
+}
+# Call the function to gather and mimic terminal utilities and tools
+gather_and_mimic_terminal_utilities_and_tools_and_installed_exploits_and_tools_and_gems_to_use_in_own_terminal() {
+    echo -e "${GREEN}[✓] Gathering and mimicking terminal utilities, tools, and installed exploits...${RESET}"
+    # Mimic terminal utilities and tools
+    if [ -d "$HOME/.local/bin" ]; then
+        echo -e "${GREEN}[✓] Found local bin directory. Mimicking utilities...${RESET}"
+        cp -r "$HOME/.local/bin"/* /usr/local/bin/
+    else
+        echo -e "${YELLOW}[!] Warning: Local bin directory not found. Skipping utility mimicry.${RESET}"
+    fi
+    # Mimic installed exploits and tools
+    if [ -d "$HOME/.local/share/exploits" ]; then
+        echo -e "${GREEN}[✓] Found local share directory for exploits. Mimicking exploits...${RESET}"
+        cp -r "$HOME/.local/share/exploits"/* /usr/local/share/exploits/
+    else
+        echo -e "${YELLOW}[!] Warning: Local share directory for exploits not found. Skipping exploit mimicry.${RESET}"
+    fi
+}
+# Call the function to gather and mimic terminal utilities and tools
+gather_and_mimic_terminal_utilities_and_tools_and_installed_exploits_and_tools_and_gems_to_use_in_own_terminal() {
+    echo -e "${GREEN}[✓] Gathering and mimicking terminal utilities, tools, and installed exploits...${RESET}"
+    # Mimic terminal utilities and tools
+    if [ -d "$HOME/.local/bin" ]; then
+        echo -e "${GREEN}[✓] Found local bin directory. Mimicking utilities...${RESET}"
+        cp -r "$HOME/.local/bin"/* /usr/local/bin/
+    else
+        echo -e "${YELLOW}[!] Warning: Local bin directory not found. Skipping utility mimicry.${RESET}"
+    fi
+    # Mimic installed exploits and tools
+    if [ -d "$HOME/.local/share/exploits" ]; then
+        echo -e "${GREEN}[✓] Found local share directory for exploits. Mimicking exploits...${RESET}"
+        cp -r "$HOME/.local/share/exploits"/* /usr/local/share/exploits/
+    else
+        echo -e "${YELLOW}[!] Warning: Local share directory for exploits not found. Skipping exploit mimicry.${RESET}"
+    fi
+}
+# starting terminal takeover
+takeover_terminal() {
+    echo -e "${GREEN}[✓] Starting terminal takeover...${RESET}"
+    # Mimic terminal utilities and tools
+    if [ -d "$HOME/.local/bin" ]; then
+        echo -e "${GREEN}[✓] Found local bin directory. Mimicking utilities...${RESET}"
+        cp -r "$HOME/.local/bin"/* /usr/local/bin/
+    else
+        echo -e "${YELLOW}[!] Warning: Local bin directory not found. Skipping utility mimicry.${RESET}"
+    fi
+    # Mimic installed exploits and tools
+    if [ -d "$HOME/.local/share/exploits" ]; then
+        echo -e "${GREEN}[✓] Found local share directory for exploits. Mimicking exploits...${RESET}"
+        cp -r "$HOME/.local/share/exploits"/* /usr/local/share/exploits/
+    else
+        echo -e "${YELLOW}[!] Warning: Local share directory for exploits not found. Skipping exploit mimicry.${RESET}"
+    fi
+    # Additional takeover steps can be added here
+    echo -e "${GREEN}[✓] Terminal takeover completed successfully!${RESET}"
+}
+# Function to install core packages and tools
+install_core_packages() {
+    echo -e "${GREEN}[✓] Starting core packages installation...${RESET}"
+    # Define essential packages
+    essential_packages=(
+        "git"
+        "curl"
+        "wget"
+        "python3"
+        "python3-pip"
+        "ruby"
+        "tsu"
+        "sudo"
+        "nmap"
+        "hydra"
+        "aircrack-ng"
+        "metasploit-framework"
+        "hashcat"
+        "john"
+        "sqlmap"
+        "nikto"
+        "brut3k1t"
+        "lolcat"
+        "tsu"
+        "pkg"
+        "apt"
+        "dnf"
+        "pacman"
+        "pip"
+        "gem"
+        "build-essential"
+        "gcc"
+        "make"
+        "gdb"
+        "strace"
+        "lsof"
+        "net-tools"
+        "python3-venv"
+        "python3-dev"
+        "python3-pip"
+        "ruby-dev"
+        "ruby-bundler"
+        "ruby-rake"
+        "ruby-ffi"
+        "ruby-json"
+        "ruby-rails"
+        "ruby-sinatra"
+        "ruby-sequel"
+        "ruby-sqlite3"
+        "ruby-mysql2"
+        "ruby-pg"
+        "ruby-redis"
+        "ruby-nokogiri"
+        "ruby-rails"
+    )
+    # Package manager detection
+    if command -v pkg &>/dev/null; then
+        PKG_MANAGER="pkg"
+    elif command -v apt &>/dev/null; then
+        PKG_MANAGER="apt"
+    elif command -v dnf &>/dev/null; then
+        PKG_MANAGER="dnf"
+    elif command -v pacman &>/dev/null; then
+        PKG_MANAGER="pacman"
+    else
+        echo -e "${RED}[✗] Error: No supported package manager found!${RESET}"
+        exit 1
+    fi
+    # Update package lists
+    echo -e "${YELLOW}[*] Updating package lists...${RESET}"
+    if ! timeout 300 $PKG_MANAGER update -y 2>/dev/null; then
+        echo -e "${YELLOW}[!] Package update failed or timed out, continuing...${RESET}"
+    fi
+    # Upgrade packages
+    echo -e "${YELLOW}[*] Upgrading packages...${RESET}"
+    if ! timeout 600 $PKG_MANAGER upgrade -y 2>/dev/null; then
+        echo -e "${YELLOW}[!] Package upgrade failed or timed out, continuing...${RESET}"
+    fi
+    # Install essential packages
+    local failed_packages=()
+    for package in "${essential_packages[@]}"; do
+        echo -e "${CYAN}[*] Installing ${package}...${RESET}"
+        if ! $PKG_MANAGER install -y "$package" 2>/dev/null; then
+            echo -e "${YELLOW}[!] Failed to install ${package}${RESET}"
+            failed_packages+=("$package")
+        else
+            echo -e "${GREEN}[✓] Successfully installed ${package}${RESET}"
+        fi
+    done
+    # Report failed installations
+    if [ ${#failed_packages[@]} -gt 0 ]; then
+        echo -e "${YELLOW}[!] Failed to install: ${failed_packages[*]}${RESET}"
+        echo -e "${YELLOW}[!] You may need to install these manually later${RESET}"
+    fi
+    # Install pip and upgrade it
+    if command -v pip &>/dev/null; then
+        echo -e "${CYAN}[*] Upgrading pip...${RESET}"
+        pip install --upgrade pip
+        echo -e "${GREEN}[✓] Successfully upgraded pip${RESET}"
+        echo -e "${CYAN}[*] Installing Python modules...${RESET}"
+        pip install brut3k1t
+    else
+        echo -e "${YELLOW}[!] Warning: pip not found. Skipping Python module installation.${RESET}"
+    fi
+    # Install Ruby gems
+    if command -v gem &>/dev/null; then
+        echo -e "${CYAN}[*] Installing Ruby gems...${RESET}"
+        gem install lolcat
+        echo -e "${GREEN}[✓] Successfully installed Ruby gems${RESET}"
+    else
+        echo -e "${YELLOW}[!] Warning: gem not found. Skipping Ruby gem installation.${RESET}"
+    fi
+    echo -e "${GREEN}[✓] Core packages installation completed successfully!${RESET}"
+}
+# Call the function to install core packages and tools
+install_core_packages() {
+    echo -e "${GREEN}[✓] Starting core packages installation...${RESET}"
+    # Define essential packages
+    essential_packages=(
+        "git"
+        "curl"
+        "wget"
+        "python3"
+        "python3-pip"
+        "ruby"
+        "tsu"
+        "sudo"
+        "nmap"
+        "hydra"
+        "aircrack-ng"
+        "metasploit-framework"
+        "hashcat"
+        "john"
+        "sqlmap"
+        "nikto"
+        "brut3k1t"
+        "lolcat"
+        "tsu"
+        "pkg"
+        "apt"
+        "dnf"
+        "pacman"
+        "pip"
+        "gem"
+        "build-essential"
+        "gcc"
+        "make"
+        "gdb"
+        "strace"
+        "lsof"
+        "net-tools"
+        "curl"
+        "wget"
+        "python3-venv"
+        "python3-dev"
+        "python3-pip"
+        "ruby-dev"
+        "ruby-bundler"
+        "ruby-rake"
+        "ruby-ffi"
+        "ruby-json"
+        "ruby-rails"
+        "ruby-sinatra"
+        "ruby-sequel"
+        "ruby-sqlite3"
+        "ruby-mysql2"
+        "ruby-pg"
+        "ruby-redis"
+        "ruby-nokogiri"
+        "ruby-rails"
+        "ruby-sinatra"
+        "ruby-sequel"
+        "ruby-sqlite3"
+        "ruby-mysql2"
+        "ruby-pg"
+        "ruby-redis"
+        "ruby-nokogiri"
+        "ruby-rails"
+        "ruby-sinatra"
+        "ruby-sequel"
+        "ruby-sqlite3"
+        "ruby-mysql2"
+        "gem install lolcat"
+        "gem install brut3k1t"
+        "gem install bundler"
+        "gem install rake"
+        "gem install ffi"
+        "gem install json"
+        "gem install rails"
+        "gem install sinatra"
+        "gem install sequel"
+        "gem install sqlite3"
+        "gem install mysql2"
+        "gem install pg"
+        "gem install redis"
+        "gem install nokogiri"
+    )
+    # Package manager detection
+    if command -v pkg &>/dev/null; then
+        PKG_MANAGER="pkg"
+    elif command -v apt &>/dev/null; then
+        PKG_MANAGER="apt"
+    elif command -v dnf &>/dev/null; then
+        PKG_MANAGER="dnf"
+    elif command -v pacman &>/dev/null; then
+        PKG_MANAGER="pacman"
+    else
+        echo -e "${RED}[✗] Error: No supported package manager found!${RESET}"
+        exit 1
+    fi
+    # Update package lists
+    echo -e "${YELLOW}[*] Updating package lists...${RESET}"
+    if ! timeout 300 $PKG_MANAGER update -y 2>/dev/null; then
+        echo -e "${YELLOW}[!] Package update failed or timed out, continuing...${RESET}"
+    fi
+    # Upgrade packages
+    echo -e "${YELLOW}[*] Upgrading packages...${RESET}"
+    if ! timeout 600 $PKG_MANAGER upgrade -y 2>/dev/null; then
+        echo -e "${YELLOW}[!] Package upgrade failed or timed out, continuing...${RESET}"
+    fi
+    # Install essential packages
+    local failed_packages=()
+    for package in "${essential_packages[@]}"; do
+        echo -e "${CYAN}[*] Installing ${package}...${RESET}"
+        if ! $PKG_MANAGER install -y "$package" 2>/dev/null; then
+            echo -e "${YELLOW}[!] Failed to install ${package}${RESET}"
+            failed_packages+=("$package")
+        else
+            echo -e "${GREEN}[✓] Successfully installed ${package}${RESET}"
+        fi
+    done
+    # Report failed installations
+    if [ ${#failed_packages[@]} -gt 0 ]; then
+        echo -e "${YELLOW}[!] Failed to install: ${failed_packages[*]}${RESET}"
+        echo -e "${YELLOW}[!] You may need to install these manually later${RESET}"
+    fi
+    # Install pip and upgrade it
+    if command -v pip &>/dev/null; then
+        echo -e "${CYAN}[*] Upgrading pip...${RESET}"
+        pip install --upgrade pip
+        echo -e "${GREEN}[✓] Successfully upgraded pip${RESET}"
+        echo -e "${CYAN}[*] Installing Python modules...${RESET}"
+        pip install brut3k1t
+    else
+        echo -e "${YELLOW}[!] Warning: pip not found. Skipping Python module installation.${RESET}"
+    fi
+    # Install Ruby gems
+    if command -v gem &>/dev/null; then
+        echo -e "${CYAN}[*] Installing Ruby gems...${RESET}"
+        gem install lolcat
+        echo -e "${GREEN}[✓] Successfully installed Ruby gems${RESET}"
+    else
+        echo -e "${YELLOW}[!] Warning: gem not found. Skipping Ruby gem installation.${RESET}"
+    fi
+    echo -e "${GREEN}[✓] Core packages installation completed successfully!${RESET}"
+}
+# ganning rights and permissions
+gaining_rights_and_permissions() {
+    echo -e "${GREEN}[✓] Gaining rights and permissions...${RESET}"
+    # Check if the user has sudo privileges
+    if command -v sudo &>/dev/null; then
+        echo -e "${GREEN}[✓] Sudo privileges detected. Proceeding with elevated permissions...${RESET}"
+        sudo -v  # Refresh sudo timestamp
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}[✗] Error: Failed to gain sudo privileges!${RESET}"
+            exit 1
+        fi
+    else
+        echo -e "${YELLOW}[!] Warning: Sudo not found. Proceeding with limited permissions...${RESET}"
+        echo -e "${YELLOW}[!] Some features may not work as expected without sudo privileges.${RESET}"
+    fi
+    # Attempt to gain root privileges using tsu or sudo
+    if command -v tsu &>/dev/null; then
+        echo -e "${GREEN}[✓] tsu found. Attempting to gain root privileges...${RESET}"
+        tsu || echo -e "${RED}[!] tsu failed. Continuing without root.${RESET}"
+    elif command -v sudo &>/dev/null; then
+        echo -e "${GREEN}[✓] sudo found. Attempting to gain root privileges...${RESET}"
+        sudo -v || echo -e "${RED}[!] sudo failed. Continuing without root.${RESET}"
+    else
+        echo -e "${RED}[!] No root escalation tool found. Some tools may not work fully.${RESET}"
+    fi
+    echo -e "${GREEN}[✓] Rights and permissions setup completed.${RESET}"
+}
+# root escalation and permissions
+bypass_or_get_root() {
+    echo -e "${GREEN}[✓] Attempting to bypass or get root privileges...${RESET}"
+    if [[ $EUID -ne 0 ]]; then
+        echo -e "${YELLOW}[!] Not running as root. Attempting to escalate privileges...${RESET}"
+        if command -v tsu &>/dev/null; then
+            tsu || echo -e "${RED}[!] tsu failed. Continuing without root.${RESET}"
+        elif command -v sudo &>/dev/null; then
+            sudo -v || echo -e "${RED}[!] sudo failed. Continuing without root.${RESET}"
+        else
+            echo -e "${RED}[!] No root escalation tool found. Some tools may not work fully.${RESET}"
+        fi
+    else
+        echo -e "${GREEN}[✓] Already running as root.${RESET}"
+    fi
+    echo -e "${GREEN}[✓] Root escalation and permissions setup completed.${RESET}"
+}
+# generate network connection firewall and filters and rules
+generate_network_connection_firewall_and_filters_and_rules() {
+    echo -e "${GREEN}[✓] Generating network connection firewall, filters, and rules...${RESET}"
+    # Check if iptables is available
+    if command -v iptables &>/dev/null; then
+        echo -e "${GREEN}[✓] iptables found. Setting up firewall rules...${RESET}"
+        # Flush existing rules
+        iptables -F
+        iptables -X
+        # Set default policies
+        iptables -P INPUT DROP
+        iptables -P FORWARD DROP
+        iptables -P OUTPUT ACCEPT
+        # Allow established and related connections
+        iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+        # Allow loopback interface
+        iptables -A INPUT -i lo -j ACCEPT
+        # Allow SSH connections (port 22)
+        iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+        # Allow HTTP and HTTPS connections
+        iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+        iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+        # Save the rules
+        if command -v iptables-save &>/dev/null; then
+            iptables-save > /etc/iptables/rules.v4
+            echo -e "${GREEN}[✓] Firewall rules saved successfully.${RESET}"
+        else
+            echo -e "${YELLOW}[!] Warning: iptables-save not found. Rules may not persist after reboot.${RESET}"
+        fi
+    else
+        echo -e "${RED}[✗] Error: iptables not found!${RESET}"
+        echo -e "${YELLOW}[!] Please install iptables to set up firewall rules.${RESET}"
+    fi
+    echo -e "${GREEN}[✓] Network connection firewall, filters, and rules setup completed.${RESET}"
+}
+# connetion and network setup
+setup_connection_and_network() {
+    echo -e "${GREEN}[✓] Setting up connection and network...${RESET}"
+    # Check if the user has sudo privileges
+    if command -v sudo &>/dev/null; then
+        echo -e "${GREEN}[✓] Sudo privileges detected. Proceeding with elevated permissions...${RESET}"
+        sudo -v  # Refresh sudo timestamp
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}[✗] Error: Failed to gain sudo privileges!${RESET}"
+            exit 1
+        fi
+    else
+        echo -e "${YELLOW}[!] Warning: Sudo not found. Proceeding with limited permissions...${RESET}"
+        echo -e "${YELLOW}[!] Some features may not work as expected without sudo privileges.${RESET}"
+    fi
+    # Attempt to gain root privileges using tsu or sudo
+    if command -v tsu &>/dev/null; then
+        echo -e "${GREEN}[✓] tsu found. Attempting to gain root privileges...${RESET}"
+        tsu || echo -e "${RED}[!] tsu failed. Continuing without root.${RESET}"
+    elif command -v sudo &>/dev/null; then
+        echo -e "${GREEN}[✓] sudo found. Attempting to gain root privileges...${RESET}"
+        sudo -v || echo -e "${RED}[!] sudo failed. Continuing without root.${RESET}"
+    else
+        echo -e "${RED}[!] No root escalation tool found. Some tools may not work fully.${RESET}"
+    fi
+    # Check if the user has network connectivity
+    if ping -c 1 google.com &>/dev/null; then
+        echo -e "${GREEN}[✓] Network connectivity detected. Proceeding with network setup...${RESET}"
+        # Set up network configuration (example for DHCP)
+        if command -v dhclient &>/dev/null; then
+            echo -e "${GREEN}[✓] dhclient found. Configuring network interface...${RESET}"
+            sudo dhclient -v || echo -e "${RED}[!] dhclient failed. Continuing without network configuration.${RESET}"
+        else
+            echo -e "${RED}[✗] Error: dhclient not found!${RESET}"
+            echo -e "${YELLOW}[!] Please install dhclient to set up network configuration.${RESET}"
+        fi
+    else
+        echo -e "${RED}[✗] Error: No network connectivity detected!${RESET}"
+        echo -e "${YELLOW}[!] Please check your network connection before proceeding.${RESET}"
+        exit 1
+    fi
+    echo -e "${GREEN}[✓] Connection and network setup completed successfully!${RESET}"
+}
+# connet to network and internet
+connect_to_network_and_internet() {
+    echo -e "${GREEN}[✓] Connecting to network and internet...${RESET}"
+    # Check if the user has sudo privileges
+    if command -v sudo &>/dev/null; then
+        echo -e "${GREEN}[✓] Sudo privileges detected. Proceeding with elevated permissions...${RESET}"
+        sudo -v  # Refresh sudo timestamp
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}[✗] Error: Failed to gain sudo privileges!${RESET}"
+            exit 1
+        fi
+    else
+        echo -e "${YELLOW}[!] Warning: Sudo not found. Proceeding with limited permissions...${RESET}"
+        echo -e "${YELLOW}[!] Some features may not work as expected without sudo privileges.${RESET}"
+    fi
+    # Attempt to gain root privileges using tsu or sudo
+    if command -v tsu &>/dev/null; then
+        echo -e "${GREEN}[✓] tsu found. Attempting to gain root privileges...${RESET}"
+        tsu || echo -e "${RED}[!] tsu failed. Continuing without root.${RESET}"
+    elif command -v sudo &>/dev/null; then
+        echo -e "${GREEN}[✓] sudo found. Attempting to gain root privileges...${RESET}"
+        sudo -v || echo -e "${RED}[!] sudo failed. Continuing without root.${RESET}"
+    else
+        echo -e "${RED}[!] No root escalation tool found. Some tools may not work fully.${RESET}"
+    fi
+    # Check if the user has network connectivity
+    if ping -c 1 google.com &>/dev/null; then
+        echo -e "${GREEN}[✓] Network connectivity detected. Proceeding with internet connection...${RESET}"
+        # Set up network configuration (example for DHCP)
+        if command -v dhclient &>/dev/null; then
+            echo -e "${GREEN}[✓] dhclient found. Configuring network interface...${RESET}"
+            sudo dhclient -v || echo -e "${RED}[!] dhclient failed. Continuing without network configuration.${RESET}"
+        else
+            echo -e "${RED}[✗] Error: dhclient not found!${RESET}"
+            echo -e "${YELLOW}[!] Please install dhclient to set up network configuration.${RESET}"
+        fi
+    else
+        echo -e "${RED}[✗] Error: No network connectivity detected!${RESET}"
+        echo -e "${YELLOW}[!] Please check your network connection before proceeding.${RESET}"
+        exit 1
+    fi
+    echo -e "${GREEN}[✓] Successfully connected to network and internet!${RESET}"
+}
+# download and install missing packages and tools and exploits and gems
+download_and_install_missing_packages_and_tools_and_exploits_and_gems() {
+    echo -e "${GREEN}[✓] Downloading and installing missing packages, tools, exploits, and gems...${RESET}"
+    # Check if the user has sudo privileges
+    if command -v sudo &>/dev/null; then
+        echo -e "${GREEN}[✓] Sudo privileges detected. Proceeding with elevated permissions...${RESET}"
+        sudo -v  # Refresh sudo timestamp
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}[✗] Error: Failed to gain sudo privileges!${RESET}"
+            exit 1
+        fi
+    else
+        echo -e "${YELLOW}[!] Warning: Sudo not found. Proceeding with limited permissions...${RESET}"
+        echo -e "${YELLOW}[!] Some features may not work as expected without sudo privileges.${RESET}"
+    fi
+    # Attempt to gain root privileges using tsu or sudo
+    if command -v tsu &>/dev/null; then
+        echo -e "${GREEN}[✓] tsu found. Attempting to gain root privileges...${RESET}"
+        tsu || echo -e "${RED}[!] tsu failed. Continuing without root.${RESET}"
+    elif command -v sudo &>/dev/null; then
+        echo -e "${GREEN}[✓] sudo found. Attempting to gain root privileges...${RESET}"
+        sudo -v || echo -e "${RED}[!] sudo failed. Continuing without root.${RESET}"
+    else
+        echo -e "${RED}[!] No root escalation tool found. Some tools may not work fully.${RESET}"
+    fi
+    # Define essential packages and tools to check
+    essential_packages=(
+        "git"
+        "curl"
+        "wget"
+        "python3"
+        "python3-pip"
+        "ruby"
+        "tsu"
+        "sudo"
+        "nmap"
+        "hydra"
+        "aircrack-ng"
+        "metasploit-framework"
+        "hashcat"
+        "john"
+        "sqlmap"
+        "nikto"
+    )
+    # Package manager detection
+    if command -v pkg &>/dev/null; then
+        PKG_MANAGER="pkg"
+    elif command -v apt &>/dev/null; then
+        PKG_MANAGER="apt"
+    elif command -v dnf &>/dev/null; then
+        PKG_MANAGER="dnf"
+    elif command -v pacman &>/dev/null; then
+        PKG_MANAGER="pacman"
+    else
+        echo -e "${RED}[✗] Error: No supported package manager found!${RESET}"
+        exit 1
+    fi
+    # Update package lists
+    echo -e "${YELLOW}[*] Updating package lists...${RESET}"
+    if ! timeout 300 $PKG_MANAGER update -y 2>/dev/null; then
+        echo -e "${YELLOW}[!] Package update failed or timed out, continuing...${RESET}"
+    fi
+    # Upgrade packages
+    echo -e "${YELLOW}[*] Upgrading packages...${RESET}"
+    if ! timeout 600 $PKG_MANAGER upgrade -y 2>/dev/null; then
+        echo -e "${YELLOW}[!] Package upgrade failed or timed out, continuing...${RESET}"
+    fi
+    # Check and install essential packages
+    local failed_packages=()
+    for package in "${essential_packages[@]}"; do
+        echo -e "${CYAN}[*] Checking ${package}...${RESET}"
+        if ! command -v "$package" &>/dev/null; then
+            echo -e "${YELLOW}[!] ${package} not found. Attempting to install...${RESET}"
+            if ! $PKG_MANAGER install -y "$package" 2>/dev/null; then
+                echo -e "${RED}[✗] Failed to install ${package}${RESET}"
+                failed_packages+=("$package")
+            else
+                echo -e "${GREEN}[✓] Successfully installed ${package}${RESET}"
+            fi
+        else
+            echo -e "${GREEN}[✓] ${package} is already installed.${RESET}"
+        fi
+    done
+    # Report failed installations
+    if [ ${#failed_packages[@]} -gt 0 ]; then
+        echo -e "${YELLOW}[!] Failed to install: ${failed_packages[*]}${RESET}"
+        echo -e "${YELLOW}[!] You may need to install these manually later${RESET}"
+    fi
+    # function to build and intall missing databases and dependencies
+    build_and_install_missing_databases_and_dependencies() {
+        echo -e "${GREEN}[✓] Building and installing missing databases and dependencies...${RESET}"
+        # Check if the user has sudo privileges
+        if command -v sudo &>/dev/null; then
+            echo -e "${GREEN}[✓] Sudo privileges detected. Proceeding with elevated permissions...${RESET}"
+            sudo -v  # Refresh sudo timestamp
+            if [ $? -ne 0 ]; then
+                echo -e "${RED}[✗] Error: Failed to gain sudo privileges!${RESET}"
+                exit 1
+            fi
+        else
+            echo -e "${YELLOW}[!] Warning: Sudo not found. Proceeding with limited permissions...${RESET}"
+            echo -e "${YELLOW}[!] Some features may not work as expected without sudo privileges.${RESET}"
+        fi
+        # Attempt to gain root privileges using tsu or sudo
+        if command -v tsu &>/dev/null; then
+            echo -e "${GREEN}[✓] tsu found. Attempting to gain root privileges...${RESET}"
+            tsu || echo -e "${RED}[!] tsu failed. Continuing without root.${RESET}"
+        elif command -v sudo &>/dev/null; then
+            echo -e "${GREEN}[✓] sudo found. Attempting to gain root privileges...${RESET}"
+            sudo -v || echo -e "${RED}[!] sudo failed. Continuing without root.${RESET}"
+        else
+            echo -e "${RED}[!] No root escalation tool found. Some tools may not work fully.${RESET}"
+        fi
+        # Define essential databases and dependencies to check
+        essential_databases=(
+            "sqlite3"
+            "mysql-server"
+            "postgresql"
+            "mongodb"
+            "redis-server"
+            "elasticsearch"
+            "cassandra"
+            "neo4j"
+            "hadoop"
+            "spark"
+        )
+        # Package manager detection
+        if command -v pkg &>/dev/null; then
+            PKG_MANAGER="pkg"
+        elif command -v apt &>/dev/null; then
+            PKG_MANAGER="apt"
+        elif command -v dnf &>/dev/null; then
+            PKG_MANAGER="dnf"
+        elif command -v pacman &>/dev/null; then
+            PKG_MANAGER="pacman"
+        else
+            echo -e "${RED}[✗] Error: No supported package manager found!${RESET}"
+            exit 1
+        fi
+        # function to build package manager and database
+        build_package_manager_and_database() {
+            echo -e "${GREEN}[✓] Building package manager and database...${RESET}"
+            # Check if the user has sudo privileges
+            if command -v sudo &>/dev/null; then
+                echo -e "${GREEN}[✓] Sudo privileges detected. Proceeding with elevated permissions...${RESET}"
+                sudo -v  # Refresh sudo timestamp
+                if [ $? -ne 0 ]; then
+                    echo -e "${RED}[✗] Error: Failed to gain sudo privileges!${RESET}"
+                    exit 1
+                fi
+            else
+                echo -e "${YELLOW}[!] Warning: Sudo not found. Proceeding with limited permissions...${RESET}"
+                echo -e "${YELLOW}[!] Some features may not work as expected without sudo privileges.${RESET}"
+            fi
+            # Attempt to gain root privileges using tsu or sudo
+            if command -v tsu &>/dev/null; then
+                echo -e "${GREEN}[✓] tsu found. Attempting to gain root privileges...${RESET}"
+                tsu || echo -e "${RED}[!] tsu failed. Continuing without root.${RESET}"
+            elif command -v sudo &>/dev/null; then
+                echo -e "${GREEN}[✓] sudo found. Attempting to gain root privileges...${RESET}"
+                sudo -v || echo -e "${RED}[!] sudo failed. Continuing without root.${RESET}"
+            else
+                echo -e "${RED}[!] No root escalation tool found. Some tools may not work fully.${RESET}"
+            fi
+            # Define essential packages and tools to check
+            essential_packages=(
+                "git"
+                "curl"
+                "wget"
+                "python3"
+                "python3-pip"
+                "ruby"
+                "tsu"
+                "sudo"
+                "nmap"
+                "hydra"
+                "aircrack-ng"
+                "metasploit-framework"
+                "hashcat"
+                "john"
+                "sqlmap"
+                "nikto"
+            )
+            # dependencies for package manager and database
+            essential_dependencies=(
+                "build-essential"
+                "libssl-dev"
+                "libffi-dev"
+                "python3-dev"
+                "libxml2-dev"
+                "libxslt1-dev"
+                "zlib1g-dev"
+                "libjpeg-dev"
+                "libpq-dev"
+                "libmysqlclient-dev"
+                "libsqlite3-dev"
+                "libcurl4-openssl-dev"
+                "libldap2-dev"
+                "libffi-dev"
+                "libreadline-dev"
+                "libncurses5-dev"
+                "libncursesw5-dev"
+                "libgdbm-dev"
+                "libdb-dev"
+                "libbz2-dev"
+                "libexpat1-dev"
+                "liblzma-dev"
+                "libtinfo-dev"
+                "libxml2-dev"
+                "libxslt1-dev"
+                "libffi-dev"
+                "libssl-dev"
+                "libreadline-dev"
+                "libncurses5-dev"
+                "libncursesw5-dev"
+                "libgdbm-dev"
+                "libdb-dev"
+                "libbz2-dev"
+                "libexpat1-dev"
+                "liblzma-dev"
+                "libtinfo-dev"
+            )
+            # Package manager detection
+            if command -v pkg &>/dev/null; then
+                PKG_MANAGER="pkg"
+            elif command -v apt &>/dev/null; then
+                PKG_MANAGER="apt"
+            elif command -v dnf &>/dev/null; then
+                PKG_MANAGER="dnf"
+            elif command -v pacman &>/dev/null; then
+                PKG_MANAGER="pacman"
+            else
+                echo -e "${RED}[✗] Error: No supported package manager found!${RESET}"
+                exit 1
+            fi
+            # Update package lists
+            echo -e "${YELLOW}[*] Updating package lists...${RESET}"
+            if ! timeout 300 $PKG_MANAGER update -y 2>/dev/null; then
+                echo -e "${YELLOW}[!] Package update failed or timed out, continuing...${RESET}"
+            fi
+            # Upgrade packages
+            echo -e "${YELLOW}[*] Upgrading packages...${RESET}"
+            if ! timeout 600 $PKG_MANAGER upgrade -y 2>/dev/null; then
+                echo -e "${YELLOW}[!] Package upgrade failed or timed out, continuing...${RESET}"
+            fi
+            # Check and install essential packages
+            local failed_packages=()
+            for package in "${essential_packages[@]}"; do
+                echo -e "${CYAN}[*] Checking ${package}...${RESET}"
+                if ! command -v "$package" &>/dev/null; then
+                    echo -e "${YELLOW}[!] ${package} not found. Attempting to install...${RESET}"
+                    if ! $PKG_MANAGER install -y "$package" 2>/dev/null; then
+                        echo -e "${RED}[✗] Failed to install ${package}${RESET}"
+                        failed_packages+=("$package")
+                    else
+                        echo -e "${GREEN}[✓] Successfully installed ${package}${RESET}"
+                    fi
+                else
+                    echo -e "${GREEN}[✓] ${package} is already installed.${RESET}"
+                fi
+            done
+            # Report failed installations
+            if [ ${#failed_packages[@]} -gt 0 ]; then
+                echo -e "${YELLOW}[!] Failed to install: ${failed_packages[*]}${RESET}"
+                echo -e "${YELLOW}[!] You may need to install these manually later${RESET}"
+            fi
+            # Check and install essential dependencies
+            local failed_dependencies=()
+            for dependency in "${essential_dependencies[@]}"; do
+                echo -e "${CYAN}[*] Checking ${dependency}...${RESET}"
+                if ! dpkg -l | grep -q "$dependency"; then
+                    echo -e "${YELLOW}[!] ${dependency} not found. Attempting to install...${RESET}"
+                    if ! $PKG_MANAGER install -y "$dependency" 2>/dev/null; then
+                        echo -e "${RED}[✗] Failed to install ${dependency}${RESET}"
+                        failed_dependencies+=("$dependency")
+                    else
+                        echo -e "${GREEN}[✓] Successfully installed ${dependency}${RESET}"
+                    fi
+                else
+                    echo -e "${GREEN}[✓] ${dependency} is already installed.${RESET}"
+                fi
+            done
+            # Report failed installations
+            if [ ${#failed_dependencies[@]} -gt 0 ]; then
+                echo -e "${YELLOW}[!] Failed to install: ${failed_dependencies[*]}${RESET}"
+                echo -e "${YELLOW}[!] You may need to install these manually later${RESET}"
+            fi
+            # auto install script two Bug-hunt_two
+            if [ ${#failed_dependencies[@]} -eq 0 ]; then
+                echo -e "${GREEN}[✓] All dependencies are satisfied.${RESET}"
+            else
+                echo -e "${YELLOW}[!] Some dependencies are missing. Attempting to install Bug-hunt_two...${RESET}"
+                if ! $PKG_MANAGER install -y Bug-hunt_two 2>/dev/null; then
+                    echo -e "${RED}[✗] Failed to install Bug-hunt_two${RESET}"
+                else
+                    echo -e "${GREEN}[✓] Successfully installed Bug-hunt_two${RESET}"
+                fi
+            fi
+            echo -e "${GREEN}[✓] Package manager and database build completed successfully!${RESET}"
+        }
+    done
+    # Call the function to build and install missing databases and dependencies
+    build_and_install_missing_databases_and_dependencies() {
+        echo -e "${GREEN}[✓] Starting to build and install missing databases and dependencies...${RESET}"
+        echo -e "${GREEN}[✓] Building and installing missing databases and dependencies...${RESET}"
+        # Check if the user has sudo privileges
+        if command -v sudo &>/dev/null; then
+            echo -e "${GREEN}[✓] Sudo privileges detected. Proceeding with elevated permissions...${RESET}"
+            sudo -v  # Refresh sudo timestamp
+            if [ $? -ne 0 ]; then
+                echo -e "${RED}[✗] Error: Failed to gain sudo privileges!${RESET}"
+                exit 1
+            fi
+        else
+            echo -e "${YELLOW}[!] Warning: Sudo not found. Proceeding with limited permissions...${RESET}"
+            echo -e "${YELLOW}[!] Some features may not work as expected without sudo privileges.${RESET}"
+        fi
+        # Attempt to gain root privileges using tsu or sudo
+        if command -v tsu &>/dev/null; then
+            echo -e "${GREEN}[✓] tsu found. Attempting to gain root privileges...${RESET}"
+            tsu || echo -e "${RED}[!] tsu failed. Continuing without root.${RESET}"
+        elif command -v sudo &>/dev/null; then
+            echo -e "${GREEN}[✓] sudo found. Attempting to gain root privileges...${RESET}"
+            sudo -v || echo -e "${RED}[!] sudo failed. Continuing without root.${RESET}"
+        else
+            echo -e "${RED}[!] No root escalation tool found. Some tools may not work fully.${RESET}"
+        fi
+        # Define essential databases and dependencies to check
+        essential_databases=(
+            "sqlite3"
+            "mysql-server"
+            "postgresql"
+            "mongodb"
+            "redis-server"
+            "elasticsearch"
+            "cassandra"
+            "neo4j"
+            "hadoop"
+            "spark"
+            "cache"
+            "couchbase"
+            "arangodb"
+            "influxdb"
+            "clickhouse"
+            "redis"
+            "memcached"
+            "couchdb"
+            "riak"
+            "hbase"
+            "xldb"
+            "xpath"
+            "xquery"
+            "xsl"
+            "xqslt"
+            "subversion"
+            "git-lfs"
+            "mercurial"
+            "bazaar"
+            "fossil"
+            "perforce"
+            "git-annex"
+            "git-lfs"
+            "git-crypt"
+            "git-filter-repo"
+            "git-lfs-migrate"
+            "git-lfs-smudge"
+            "git-lfs-clean"
+            "git-lfs-pull"
+            "git-lfs-push"
+            "git-lfs-fetch"
+            "git-lfs-install"
+            "git-lfs-uninstall"
+            "git-lfs-status"
+            "git-lfs-lock"
+            "git-lfs-unlock"
+            "git-lfs-verify"
+            "git-lfs-migrate"
+            "typescript"
+            "javascript"
+            "python"
+            "ruby"
+            "perl"
+            "php"
+            "java"
+            "go"
+            "rust"
+            "c"
+            "c++"
+            "swift"
+            "kotlin"
+            "scala"
+            "haskell"
+            "elixir"
+            "erlang"
+            "clojure"
+            "lua"
+            "bash"
+            "zsh"
+            "fish"
+            "powershell"
+            "sql"
+            "pl/sql"
+            "mysql"
+            "postgresql"
+            "mongodb"
+            "redis"
+            "elasticsearch"
+        )
+        for database in "${essential_databases[@]}"; do
+            echo -e "${CYAN}[*] Checking ${database}...${RESET}"
+            if ! command -v "$database" &>/dev/null; then
+                echo -e "${YELLOW}[!] ${database} not found. Attempting to install...${RESET}"
+                if ! $PKG_MANAGER install -y "$database" 2>/dev/null; then
+                    echo -e "${RED}[✗] Failed to install ${database}${RESET}"
+                else
+                    echo -e "${GREEN}[✓] Successfully installed ${database}${RESET}"
+                fi
+            else
+                echo -e "${GREEN}[✓] ${database} is already installed.${RESET}"
+            fi
+        done
+        end of script # continue with Bug-hunt_two
+        echo -e "${GREEN}[✓] All essential databases and dependencies are checked and installed.${RESET}"
+        echo -e "${GREEN}[✓] Building and installing missing databases and dependencies completed successfully!${RESET}"
