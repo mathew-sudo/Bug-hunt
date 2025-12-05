@@ -1,66 +1,84 @@
-Termux Security Toolkit
-A comprehensive security toolkit for Termux that automates the installation and configuration of essential penetration testing and security analysis tools.
+# Termux Security Toolkit
 
-Features
-Easy Installation: Automated installation of all required security tools and dependencies
-Modular Design: Install only what you need or the entire toolkit
-Simulation Mode: Test the installation process without actually modifying your system
-Compatible: Works on both Termux and standard Linux environments
-Tools Launcher: Quick access to security tools through an interactive menu system
-No-Auth Mode: Authentication prompts are bypassed automatically for streamlined usage
-Included Tools
-Basic Security Tools
-Nmap: Network discovery and security auditing
-Hydra: Password cracking tool for various protocols
-Ncrack: High-speed network authentication cracking tool
-Advanced Security Tools
-Metasploit Framework: Penetration testing framework
-Aircrack-ng: WiFi security assessment tools
-TheFatRat: Payload generator for backdoors and exploits
-Brute force tools: Social media and service brute forcing
-Programming Languages
-Python with pip
-Ruby with bundler
-Rust
-Golang
-Erlang
-Installation
+A comprehensive security toolkit for Termux and Linux environments that automates the installation and configuration of essential penetration testing and security analysis tools.
+
+## Features
+- **Easy Installation:** Automated installation of all required security tools and dependencies
+- **Modular Design:** Install only what you need or the entire toolkit
+- **Simulation Mode:** Test the installation process without modifying your system
+- **Compatible:** Works on both Termux and standard Linux environments
+- **Tools Launcher:** Quick access to security tools through an interactive menu system
+- **No-Auth Mode:** Authentication prompts are bypassed automatically for streamlined usage
+- **Defensive Setup:** All installs are best-effort, with safe privilege escalation and configuration
+
+## Included Tools
+### Basic Security Tools
+- Nmap: Network discovery and security auditing
+- Hydra: Password cracking tool for various protocols
+- Ncrack: High-speed network authentication cracking tool
+
+### Advanced Security Tools
+- Metasploit Framework: Penetration testing framework
+- Aircrack-ng: WiFi security assessment tools
+- TheFatRat: Payload generator for backdoors and exploits
+- Brute force tools: Social media and service brute forcing
+- Searchsploit: Exploit database search utility
+
+### Programming Languages
+- Python with pip
+- Ruby with bundler
+- Rust
+- Golang
+- Erlang
+
+## Installation
 To install the complete toolkit:
-
+```sh
 chmod +x termux_security_toolkit.sh
 ./termux_security_toolkit.sh
-Then select option 6 to install and configure everything, or choose specific components to install.
+```
+Select option 6 to install and configure everything, or choose specific components to install.
 
-Demo Mode
+## Demo Mode
 To see a demonstration of the installation process without actually installing anything:
-
+```sh
 chmod +x run_demo.sh
 ./run_demo.sh
-Security Tools Launcher
+```
+
+## Security Tools Launcher
 After installation, you can use the security tools launcher for quick access to all security tools:
-
+```sh
 ./security_tools.sh
+```
 The launcher provides an interactive menu for:
+- Network Scanning Tools (Nmap)
+- Password Cracking Tools (Hydra)
+- Metasploit Framework
+- WiFi Analysis Tools (Aircrack-ng)
+- Brute Force Tools
+- TheFatRat Payload Generator
+- Searchsploit
 
-Network Scanning Tools (Nmap)
-Password Cracking Tools (Hydra)
-Metasploit Framework
-WiFi Analysis Tools (Aircrack-ng)
-Brute Force Tools
-TheFatRat Payload Generator
-Help Guide
+## Help Guide
 For detailed usage instructions and examples, refer to the help guide:
-
+```sh
 cat security_toolkit_help.txt
-No-Auth Mode
-The toolkit now features a No-Auth mode that automatically:
+```
 
-Bypasses authentication prompts in security tools
-Auto-generates credentials when needed
-Simplifies tool usage with pre-configured settings
-Creates automatic configurations for tools like Metasploit and TheFatRat
-Shows "NO-AUTH MODE ENABLED" in the toolkit banner
+## No-Auth Mode
+The toolkit features a No-Auth mode that automatically:
+- Bypasses authentication prompts in security tools
+- Auto-generates credentials when needed
+- Simplifies tool usage with pre-configured settings
+- Creates automatic configurations for tools like Metasploit and TheFatRat
+- Shows "NO-AUTH MODE ENABLED" in the toolkit banner
 This mode is ideal for rapid deployments where you want to avoid interactive authentication prompts.
 
-Disclaimer
-This toolkit is designed for ethical hacking and security research ONLY. Always obtain proper authorization before testing on any network or system. Unauthorized access to systems is illegal and unethical. The developers assume no liability for misuse of these tools.
+## Defensive Setup & Privilege Escalation
+- All installs and configuration changes are best-effort and safely validated
+- Sudoers configuration is validated before applying
+- Privilege escalation uses tsu or sudo when available, with clear user feedback
+
+## Disclaimer
+This toolkit is designed for ethical hacking and security research **ONLY**. Always obtain proper authorization before testing on any network or system. Unauthorized access to systems is illegal and unethical. The developers assume no liability for misuse of these tools.
