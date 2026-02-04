@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ApplicationIcon>Resources\n2ncloud.ico</ApplicationIcon>
+    <AssemblyName>N2ncloud</AssemblyName>
+    <RootNamespace>N2ncloud</RootNamespace>
+    <Version>1.0.0</Version>
+    <Company>N2ncloud Security</Company>
+    <Product>N2ncloud Security Platform</Product>
+    <Description>Revolutionary AntiMalware Security Platform with XXL Database Protection</Description>
+    <Copyright>Copyright © 2024 N2ncloud Security</Copyright>
+    <!-- Enable cross-platform build targeting Windows -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\n2ncloud.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Database\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

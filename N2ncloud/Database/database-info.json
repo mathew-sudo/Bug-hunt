@@ -1,0 +1,71 @@
+{
+  "database": {
+    "name": "N2ncloud XXL Security Database",
+    "version": "2024.02.001",
+    "lastUpdate": "2024-02-04T00:00:00Z",
+    "totalSignatures": 1220000
+  },
+  "categories": {
+    "virus": {
+      "count": 150000,
+      "description": "AntiVirus protection signatures"
+    },
+    "malware": {
+      "count": 250000,
+      "description": "AntiMalware detection signatures"
+    },
+    "spyware": {
+      "count": 100000,
+      "description": "AntiSpyware protection signatures"
+    },
+    "botnet": {
+      "count": 75000,
+      "description": "AntiBotnet defense signatures"
+    },
+    "hack": {
+      "count": 50000,
+      "description": "AntiHack tool detection signatures"
+    },
+    "worm": {
+      "count": 80000,
+      "description": "AntiWorm protection signatures"
+    },
+    "trojan": {
+      "count": 120000,
+      "description": "AntiTrojan defense signatures"
+    },
+    "rootkit": {
+      "count": 45000,
+      "description": "Rootkit detection signatures"
+    },
+    "ransomware": {
+      "count": 60000,
+      "description": "Ransomware protection signatures"
+    },
+    "adware": {
+      "count": 90000,
+      "description": "Adware detection signatures"
+    },
+    "pup": {
+      "count": 70000,
+      "description": "Potentially Unwanted Program signatures"
+    },
+    "keylogger": {
+      "count": 35000,
+      "description": "Keylogger detection signatures"
+    },
+    "backdoor": {
+      "count": 55000,
+      "description": "Backdoor detection signatures"
+    },
+    "exploit": {
+      "count": 40000,
+      "description": "Exploit detection signatures"
+    }
+  },
+  "updateSettings": {
+    "autoUpdate": true,
+    "updateInterval": "4hours",
+    "criticalUpdatePush": true
+  }
+}
