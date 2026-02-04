@@ -2,6 +2,47 @@
 
 A comprehensive security toolkit for Termux and Linux environments that automates the installation and configuration of essential penetration testing and security analysis tools.
 
+---
+
+## N2ncloud Security Platform
+
+**N2ncloud** is a revolutionary AntiMalware Security Platform built in C# with Windows Forms. It provides comprehensive protection through an XXL Security Database.
+
+### Features
+- **Scan Module**: Quick, Full, Custom, and Boot-Time scanning capabilities
+- **Firewall**: Advanced network traffic filtering and protection
+- **Offence/Defence**: Countermeasure and active defense tools
+- **Network**: Real-time network monitoring and traffic analysis
+- **Maintenance**: System health and security maintenance tools
+- **Intrusion Detection**: Real-time monitoring for unauthorized access
+- **Behavior Analysis**: AI-powered suspicious activity detection
+- **Quarantine**: Isolated storage for detected threats
+- **Advanced Algorithm Security**: Proprietary deep threat analysis
+- **Tracing**: Network packet and connection tracking
+- **NextGen AI**: Machine learning-based threat detection
+- **Tools/Options/Settings/Configuration**: Full customization
+
+### XXL Security Database (1,220,000+ Signatures)
+- **AntiVirus**: 150,000 signatures
+- **AntiMalware**: 250,000 signatures
+- **AntiSpyware**: 100,000 signatures
+- **AntiBotnet**: 75,000 signatures
+- **AntiHack**: 50,000 signatures
+- **AntiWorm**: 80,000 signatures
+- **AntiTrojan**: 120,000 signatures
+- Plus: Rootkit, Ransomware, Adware, PUP, Keylogger, Backdoor, Exploit detection
+
+### Building N2ncloud
+```sh
+cd N2ncloud
+dotnet build
+dotnet run
+```
+
+**Requirements**: .NET 8.0 SDK with Windows Forms support
+
+---
+
 ## Features
 - **Easy Installation:** Automated installation of all required security tools and dependencies
 - **Modular Design:** Install only what you need or the entire toolkit
