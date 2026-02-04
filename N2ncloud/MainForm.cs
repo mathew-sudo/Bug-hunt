@@ -234,7 +234,7 @@ public partial class MainForm : Form
 
         var dbUpdateLabel = new Label
         {
-            Text = $"Last Update: {DateTime.Now:yyyy-MM-dd}",
+            Text = $"Last Update: {_securityDatabase.GetLastUpdate():yyyy-MM-dd}",
             Font = new Font("Segoe UI", 8),
             ForeColor = Color.Gray,
             Location = new Point(12, 628),
